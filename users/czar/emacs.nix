@@ -1,6 +1,8 @@
 { config, pkgs, ... }:
 
 {
+  imports = [ ./aider.nix ];
+
   # Emacs configuration
   programs.emacs = {
     enable = true;
@@ -10,9 +12,7 @@
       evil-collection
       magit
       transient
-      aidermacs
       use-package
-      password-store
       direnv
       visual-fill-column
       sudo-edit
@@ -68,15 +68,6 @@
         '((".*" "~/drafts/emacs/\\1" t)))
       (setq backup-directory-alist '(("." . "~/drafts/emacs/backups")))
  
-      (use-package aidermacs
-        :bind (("C-c a" . aidermacs-transient-menu))
-        :config
-        (setenv "OPENROUTER_API_KEY" (password-store-get-field "openrouter" "apikey"))
-        (setenv "AIDER_EDIT_FORMAT" "diff")
-        (setenv "AIDER_MODEL" "openrouter/openai/gpt-5")
-        :custom
-        (comint-prompt-read-only t)
-        (aidermacs-default-chat-mode 'architect))
  
       (use-package direnv
         :config
@@ -102,24 +93,9 @@
     '';
   };
  
-  # Install aider-chat (the CLI tool that AiderMacs interfaces with)
+  # Core CLI tools
   home.packages = with pkgs; [
-    # Aider CLI tool
-    aider-chat
-    python3Packages.flake8
-    
-    # Git (required for aider)
-    git
- 
-    # To let password-store do its magic
-    gnupg
- 
     direnv
   ];
 
-  home.file.".aider.conf.yml" = {
-    text = ''
-      lint-cmd: "python: flake8"
-    '';
-  };
 }
