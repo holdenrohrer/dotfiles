@@ -60,7 +60,6 @@ in
       ];
       files = [
         ".profile"
-        ".gitconfig"
       ];
     };
   };
@@ -136,7 +135,7 @@ in
     enable = true;
     user = "czar";
   };
- 
+
 
   # Configure keymap in X11
   services.xserver.xkb.layout = "us";
