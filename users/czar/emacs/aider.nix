@@ -26,6 +26,7 @@
   home.file.".aider.conf.yml" = {
     text = ''
       lint-cmd: "${pkgs.python3Packages.flake8}/bin/flake8"
+      auto-lint: false
     '';
   };
 }
