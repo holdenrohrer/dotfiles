@@ -18,6 +18,7 @@
       sudo-edit
       dtrt-indent
       nix-mode
+      undo-tree
     ];
  
     extraConfig = ''
@@ -39,6 +40,13 @@
 
       (use-package nix-mode
         :mode "\\.nix\\'")
+
+      ;; undo-tree
+      (use-package undo-tree
+        :config
+        (global-undo-tree-mode)
+        :custom
+        (evil-undo-system 'undo-tree))
 
       (use-package sudo-edit
         :hook
@@ -67,7 +75,8 @@
         (setenv "AIDER_EDIT_FORMAT" "diff")
         :custom
         (aidermacs-default-chat-mode 'architect)
-        (aidermacs-default-model "openrouter/openai/gpt-5"))
+        (aidermacs-default-model "openrouter/openai/gpt-5")
+        (comint-prompt-read-only t))
  
       (use-package direnv
         :config
@@ -79,11 +88,12 @@
       
       (advice-add 'cd :after #'my-direnv-update-after-cd)
  
-      (setq evil-want-keybinding nil)
       ;; Evil mode
       (use-package evil
         :config
-        (evil-mode 1))
+        (evil-mode 1)
+        :custom
+        (evil-want-keybinding nil))
 
       (use-package evil-collection
         :after evil
