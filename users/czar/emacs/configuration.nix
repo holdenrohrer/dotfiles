@@ -45,6 +45,11 @@
 
       ;; undo-tree
       (use-package undo-tree
+        :init
+        (unless (file-directory-p "~/drafts/undotrees")
+          (make-directory "~/drafts/undotrees" t))
+        (setq undo-tree-history-directory-alist '(("." . "~/drafts/undotrees"))
+              undo-tree-auto-save-history t)
         :config
         (global-undo-tree-mode)
         :custom
