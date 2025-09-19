@@ -62,7 +62,10 @@
 
       (use-package dtrt-indent
         :config
-        (dtrt-indent-mode 1))
+        (dtrt-indent-mode 1)
+        (add-hook 'dtrt-indent-adapt-hook 
+          (lambda () 
+            (setq-local evil-shift-width dtrt-indent-original-indent))))
 
       (setq auto-save-file-name-transforms
         '((".*" "~/drafts/emacs/\\1" t)))

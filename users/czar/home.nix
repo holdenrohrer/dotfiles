@@ -15,7 +15,10 @@
     stateVersion = "25.05";
     username = "czar";
     homeDirectory = "/home/czar";
-
+    packages = with pkgs; [
+      git
+      gnupg
+    ];
   };
 
   # Fixing the XDG Directory Structure
