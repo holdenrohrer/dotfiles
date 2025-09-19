@@ -30,6 +30,8 @@
       (setq-default tab-width 4)
       (setq indent-line-function 'indent-relative)
 
+      (add-hook 'before-save-hook 'whitespace-cleanup)
+
       ; Fold text at word boundaries
       (visual-line-mode)
       ; And use the visual-fill-column package to 
