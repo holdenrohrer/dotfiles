@@ -25,12 +25,6 @@ let
       bat_below 50 && set_led 1;
       bat_below 10 && systemctl hybrid-sleep;
     '';
-  screenshot = pkgs.writeScriptBin "screenshot" ''
-    #!${pkgs.bash}/bin/bash
-    if pgrep slurp; then killall slurp;
-    else slurp | grim $@;
-    fi;
-  '';
 in
 {
   imports =
@@ -183,7 +177,6 @@ in
 
   programs.zsh.enable = true;
   programs.light.enable = true;
-  programs.firefox.enable = true;
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
@@ -197,39 +190,17 @@ in
     sl
     low-bat
     vim
-    firefox
-    grim
-    wl-clipboard
-    mako
-    hyperrogue
-    feh
-    zathura
     bc
-    anki
     (pass.withExtensions (exts: [ exts.pass-otp ]))
-    passff-host
     git
-    wayprompt
     wireguard-tools
     killall
     python3
-    prismlauncher
     unzip
     mutt
-    screenshot
-    slurp
   ];
 
   services.fwupd.enable = true;
-
-  programs.foot = {
-    enable = true;
-    settings = {
-      colors = {
-        alpha = 0.7;
-      };
-    };
-  };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 

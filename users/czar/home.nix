@@ -4,6 +4,7 @@
     ./emacs.nix
     ./dark-mode.nix
     ./zsh.nix
+    ./desktop.nix
   ];
 
   home = {
