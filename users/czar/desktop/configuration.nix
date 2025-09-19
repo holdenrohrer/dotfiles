@@ -90,6 +90,9 @@ in
       "--replace" "@bc@" "${pkgs.bc}/bin/bc"
       "--replace" "@killall@" "${pkgs.killall}/bin/killall"
       "--replace" "@lock@" "${lock}"
+      "--replace" "@XKB_LAYOUT@" "${config.services.xserver.xkb.layout or ""}"
+      "--replace" "@XKB_VARIANT@" "${config.services.xserver.xkb.variant or ""}"
+      "--replace" "@XKB_OPTIONS@" "${config.services.xserver.xkb.options or ""}"
     ];
   };
 }
