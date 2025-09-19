@@ -54,7 +54,7 @@ in
   services.gpg-agent = {
     enable = true;
     # Use wayprompt as the pinentry program
-    pinentryPackage = pkgs.wayprompt;
+    pinentry.package = pkgs.wayprompt;
     # Optional: tweak cache TTLs (uncomment to use)
     # defaultCacheTtl = 1800;
     # maxCacheTtl = 7200;
@@ -70,8 +70,7 @@ in
     prismlauncher
   ];
 
-  xdg.configFile."sway/config".source = pkgs.substituteAll {
-    src = ./sway.config;
+  xdg.configFile."sway/config".source = pkgs.replaceVars ./sway.config {
 
     grim = "${pkgs.grim}/bin/grim";
     wlcopy = "${pkgs.wl-clipboard}/bin/wl-copy";
