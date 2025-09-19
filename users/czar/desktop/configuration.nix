@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, osConfig, ... }:
 
 let
   screenshot = pkgs.writeScriptBin "screenshot" ''
@@ -90,9 +90,9 @@ in
       "--replace" "@bc@" "${pkgs.bc}/bin/bc"
       "--replace" "@killall@" "${pkgs.killall}/bin/killall"
       "--replace" "@lock@" "${lock}"
-      "--replace" "@XKB_LAYOUT@" "${config.services.xserver.xkb.layout or ""}"
-      "--replace" "@XKB_VARIANT@" "${config.services.xserver.xkb.variant or ""}"
-      "--replace" "@XKB_OPTIONS@" "${config.services.xserver.xkb.options or ""}"
+      "--replace" "@XKB_LAYOUT@" "${osConfig.services.xserver.xkb.layout or ""}"
+      "--replace" "@XKB_VARIANT@" "${osConfig.services.xserver.xkb.variant or ""}"
+      "--replace" "@XKB_OPTIONS@" "${osConfig.services.xserver.xkb.options or ""}"
     ];
   };
 }
