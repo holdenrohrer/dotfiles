@@ -100,6 +100,19 @@
         :after evil
         :config
         (evil-collection-init))
+
+      ;; Preserve window layout around Ediff
+      (defvar my-ediff-window-config nil)
+
+      (defun my-store-pre-ediff-winconfig ()
+        (setq my-ediff-window-config (current-window-configuration)))
+
+      (defun my-restore-pre-ediff-winconfig ()
+        (set-window-configuration my-ediff-window-config))
+
+      (add-hook 'ediff-before-setup-hook #'my-store-pre-ediff-winconfig)
+      (add-hook 'ediff-suspend-hook #'my-restore-pre-ediff-winconfig)
+      (add-hook 'ediff-quit-hook #'my-restore-pre-ediff-winconfig)
     '';
   };
  
