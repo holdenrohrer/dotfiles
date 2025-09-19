@@ -73,10 +73,10 @@
         :config
         (setenv "OPENROUTER_API_KEY" (password-store-get-field "openrouter" "apikey"))
         (setenv "AIDER_EDIT_FORMAT" "diff")
+        (setenv "AIDER_MODEL" "openrouter/openai/gpt-5")
         :custom
-        (aidermacs-default-chat-mode 'architect)
-        (aidermacs-default-model "openrouter/openai/gpt-5")
-        (comint-prompt-read-only t))
+        (comint-prompt-read-only t)
+        (aidermacs-default-chat-mode 'architect))
  
       (use-package direnv
         :config
