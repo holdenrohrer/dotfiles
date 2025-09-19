@@ -24,7 +24,6 @@
   # CLI tools required for Aider to work well
   home.packages = with pkgs; [
     aider-chat
-    python3Packages.flake8
     git
     gnupg
   ];
@@ -32,7 +31,7 @@
   # Aider CLI configuration
   home.file.".aider.conf.yml" = {
     text = ''
-      lint-cmd: "python: flake8"
+      lint-cmd: "${pkgs.python3Packages.flake8}/bin/flake8"
     '';
   };
 }
