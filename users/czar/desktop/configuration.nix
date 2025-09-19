@@ -11,6 +11,10 @@ let
   '';
 in
 {
+  imports = [
+    ./dark-mode.nix
+  ];
+
   # GUI/desktop programs managed at the user level
   programs.firefox.enable = true;
 

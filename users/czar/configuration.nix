@@ -1,10 +1,9 @@
 { config, pkgs, ... }:
 {
   imports = [
-    ./emacs.nix
-    ./dark-mode.nix
+    ./emacs/configuration.nix
+    ./desktop/configuration.nix
     ./zsh.nix
-    ./desktop.nix
   ];
 
   home = {
@@ -31,5 +30,16 @@
     music = "";
     pictures = "";
     videos = "";
+  };
+
+  home.file.".profile" = {
+    text = ''
+      export MAKEFLAGS="-j8"
+      alias julia="QT_QPA_PLATFORM=xcb julia"
+      alias pb="nc hrhr.dev 9999"
+
+      export MOZ_ENABLE_WAYLAND=1
+      export XDG_CURRENT_DESKTOP=sway
+    '';
   };
 }

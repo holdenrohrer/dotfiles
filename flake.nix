@@ -38,7 +38,7 @@
             home-manager.useUserPackages = true;
 
             # Base configurations
-            home-manager.users.czar = import ./users/czar/home.nix;
+            home-manager.users.czar = import ./users/czar/configuration.nix;
           }
         ];
       };
