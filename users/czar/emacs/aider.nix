@@ -17,14 +17,10 @@
         (setenv "AIDER_MODEL" "openrouter/openai/gpt-5")
         :custom
         (comint-prompt-read-only t)
+        (aidermacs-program "${pkgs.aider-chat}/bin/aider")
         (aidermacs-default-chat-mode 'architect))
     '';
   };
-
-  # CLI tools required for Aider to work well
-  home.packages = with pkgs; [
-    aider-chat
-  ];
 
   # Aider CLI configuration
   home.file.".aider.conf.yml" = {
