@@ -48,7 +48,7 @@ let
 
       local pm
       pm=$(per_mille_design)  # integer (0 if unknown)
-      echo "low-bat: ${pm}‰ remaining (design)"
+      echo "low-bat: $pm‰ remaining (design)"
 
       if [ "$pm" -le 10 ]; then        # <= 1%
         set_caps_leds 1
