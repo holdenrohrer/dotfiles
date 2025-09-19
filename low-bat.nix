@@ -14,15 +14,9 @@ let
       return 1
     }
 
-    # Sum integers from files (skips missing/unreadable).
+    # Sum integers from files (fast via awk; skips missing).
     sum_files() {
-      local total=0 n
-      for f in "$@"; do
-        [ -r "$f" ] || continue
-        read -r n < "$f" || continue
-        total=$(( total + n ))
-      done
-      echo "$total"
+      awk '{s+=$1} END{print s+0}' "$@"
     }
 
     # Composite battery per‑mille using design capacity (energy_* only).
