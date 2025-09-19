@@ -4,33 +4,12 @@
 
 { config, lib, pkgs, ... }:
 
-let
-  low-bat = pkgs.writeScriptBin "low-bat" ''
-      #!${pkgs.bash}/bin/bash
-      set_led() {
-          echo $1 > /sys/class/leds/input0::capslock/brightness
-      }
-
-      composite_bat() {
-          CAPACITY="$(cat /sys/class/power_supply/BAT*/energy_full_design | awk '{s+=$1} END {print s}')"
-          ENERGY="$(cat /sys/class/power_supply/BAT*/energy_now | awk '{s+=$1} END {print s}')"
-          echo "1000*$${ENERGY}/$${CAPACITY}" | bc
-      }
-
-      bat_below() { # takes input as per mille
-          test $(cat /sys/class/power_supply/AC/online) = 0 && test $(composite_bat) -le $1
-      }
-
-      set_led 0;
-      bat_below 50 && set_led 1;
-      bat_below 10 && systemctl hybrid-sleep;
-    '';
-in
 {
   imports =
     [ # Include the results of the hardware scan.
       ./hardware-configuration.nix
       ./wireless.nix
+      ./low-bat.nix
     ];
 
   environment.persistence."/persist" = {
@@ -61,12 +40,6 @@ in
     };
   };
 
-  services.udev.extraRules = ''
-    SUBSYSTEM=="power_supply", ATTR{status}=="Discharging", ATTR{capacity}=="[0-1]", RUN+="${low-bat}/bin/low-bat off"
-
-    SUBSYSTEM=="power_supply", ATTR{status}=="Discharging", ATTR{capacity}=="[0-5]", RUN+="${low-bat}/bin/low-bat low"
-    SUBSYSTEM=="power_supply", ATTR{status}=="Charging", RUN+="${low-bat}/bin/low-bat chr"
-  '';
 
   services.logind = {
     powerKey = "hibernate";
@@ -186,7 +159,6 @@ in
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
     sl
-    low-bat
     vim
     bc
     (pass.withExtensions (exts: [ exts.pass-otp ]))
