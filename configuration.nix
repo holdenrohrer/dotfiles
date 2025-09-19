@@ -38,7 +38,6 @@ in
     directories = [
       "/etc/nixos"
       "/etc/wireguard"
-      "/usr/local/bin"
       "/var/lib/nixos"
     ];
     files = [
