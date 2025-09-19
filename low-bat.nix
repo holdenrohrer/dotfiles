@@ -48,7 +48,7 @@ let
 
       local pm
       pm=$(per_mille_design)  # integer (0 if unknown)
-      echo "low-bat: $pm‰ remaining (design)"
+      printf 'low-bat: %s‰ remaining (design)\n' "$pm"
 
       if [ "$pm" -le 10 ]; then        # <= 1%
         set_caps_leds 1
@@ -71,6 +71,7 @@ in {
     description = "Low battery check (design-based)";
     serviceConfig = {
       Type = "oneshot";
+      SyslogIdentifier = "low-bat";
       ExecStart = "${low-bat}/bin/low-bat";
     };
   };
