@@ -160,7 +160,6 @@
   environment.systemPackages = with pkgs; [
     sl
     vim
-    bc
     (pass.withExtensions (exts: [ exts.pass-otp ]))
     git
     wireguard-tools
