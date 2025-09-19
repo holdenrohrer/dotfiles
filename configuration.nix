@@ -172,9 +172,13 @@ in
     packages = with pkgs; [
       tree
     ];
+    shell = pkgs.zsh;
   };
 
-  # zsh managed via Home Manager (loginShell=true in users/czar/zsh.nix)
+  # Ensure system zsh program is enabled when zsh is the login shell
+  programs.zsh.enable = true;
+
+  # zsh config is managed via Home Manager; login shell is set system-wide above
   programs.light.enable = true;
 
   programs.sway = {
