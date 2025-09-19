@@ -8,15 +8,19 @@ let
     # Return success if any mains power supply is online.
     ac_online() {
       for p in /sys/class/power_supply/*; do
-        [ -f "$p/type" ] && [ "$(cat "$p/type")" = "Mains" ] || continue
-        [ -f "$p/online" ] && [ "$(cat "$p/online")" = "1" ] && return 0
+        [ -f "$p/type" ] || continue
+        [ -f "$p/online" ] || continue
+        local t o
+        IFS= read -r t < "$p/type" || continue
+        IFS= read -r o < "$p/online" || continue
+        [ "$t" = "Mains" ] && [ "$o" = "1" ] && return 0
       done
       return 1
     }
 
     # Sum integers from files (fast via awk; skips missing).
     sum_files() {
-      awk '{s+=$1} END{print s+0}' "$@"
+      ${pkgs.gawk}/bin/awk '{s+=$1} END{print s+0}' "$@"
     }
 
     # Composite battery per‑mille using design capacity (energy_* only).
