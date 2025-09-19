@@ -58,9 +58,6 @@ in
         ".local/share/Anki2"
         ".local/share/PrismLauncher"
       ];
-      files = [
-        ".profile"
-      ];
     };
   };
 
