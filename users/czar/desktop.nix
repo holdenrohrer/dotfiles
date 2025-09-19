@@ -3,9 +3,11 @@
 let
   screenshot = pkgs.writeScriptBin "screenshot" ''
     #!${pkgs.bash}/bin/bash
-    if pgrep slurp; then killall slurp;
-    else slurp | grim $@;
-    fi;
+    if pgrep slurp; then
+      killall slurp
+    else
+      slurp | grim "$@"
+    fi
   '';
 in
 {
@@ -21,21 +23,21 @@ in
     };
   };
 
+  # Prefer Home Manager modules where available
+  services.mako.enable = true;
+  programs.zathura.enable = true;
+
   # Packages useful in the graphical (Wayland/Sway) environment
   home.packages = with pkgs; [
     grim
     wl-clipboard
-    mako
     slurp
     screenshot
 
     hyperrogue
     feh
-    zathura
     anki
     prismlauncher
-
-    passff-host
     wayprompt
   ];
 }
