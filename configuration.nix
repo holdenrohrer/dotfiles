@@ -135,9 +135,9 @@ in
 
 
   # Configure keymap in X11
-  services.xserver.xkb.layout = "us";
-  services.xserver.xkb.variant = "dvp";
-  services.xserver.xkb.options = "caps:escape";
+  services.xserver.xkb.layout = "us,us";
+  services.xserver.xkb.variant = "dvp,";
+  services.xserver.xkb.options = "caps:escape,lv3:ralt_switch_multikey,grp:lalt_lshift_toggle";
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
