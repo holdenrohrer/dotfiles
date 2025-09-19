@@ -24,8 +24,6 @@
   # CLI tools required for Aider to work well
   home.packages = with pkgs; [
     aider-chat
-    git
-    gnupg
   ];
 
   # Aider CLI configuration
