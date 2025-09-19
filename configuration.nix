@@ -183,6 +183,9 @@ in
 
   xdg.portal.wlr.enable = true;
 
+  # Back up files that conflict with Home Manager-managed files during activation
+  home-manager.backupFileExtension = "backup";
+
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
     sl
