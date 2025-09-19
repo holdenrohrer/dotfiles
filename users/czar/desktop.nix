@@ -34,6 +34,10 @@ in
     slurp
     screenshot
 
+    # moved from system-level sway.extraPackages
+    i3status
+    dmenu
+
     hyperrogue
     feh
     anki

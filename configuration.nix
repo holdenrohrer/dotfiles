@@ -172,15 +172,14 @@ in
     packages = with pkgs; [
       tree
     ];
-    shell = pkgs.zsh;
   };
 
-  programs.zsh.enable = true;
+  # zsh managed via Home Manager (loginShell=true in users/czar/zsh.nix)
   programs.light.enable = true;
+
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
-    extraPackages = with pkgs; [ i3status dmenu ];
   };
 
   xdg.portal.wlr.enable = true;
