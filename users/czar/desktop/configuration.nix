@@ -3,7 +3,7 @@
 let
   screenshot = pkgs.writeScriptBin "screenshot" ''
     #!${pkgs.bash}/bin/bash
-    if pgrep slurp; then
+    if ${pkgs.procps}/bin/pgrep slurp; then
       ${pkgs.killall}/bin/killall slurp
     else
       ${pkgs.slurp}/bin/slurp | ${pkgs.grim}/bin/grim "$@"
@@ -87,6 +87,8 @@ in
     sed = "${pkgs.gnused}/bin/sed";
     bc = "${pkgs.bc}/bin/bc";
     killall = "${pkgs.killall}/bin/killall";
+    DEFAULT_AUDIO_SINK = "@DEFAULT_AUDIO_SINK@";
+    DEFAULT_AUDIO_SOURCE = "@DEFAULT_AUDIO_SOURCE@";
 
     lock = lock;
   };
