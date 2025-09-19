@@ -59,8 +59,6 @@ in
         ".local/share/PrismLauncher"
       ];
       files = [
-        ".config/sway/config"
-        ".config/lock"
         ".profile"
         ".gitconfig"
       ];
