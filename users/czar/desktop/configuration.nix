@@ -70,26 +70,26 @@ in
     prismlauncher
   ];
 
-  xdg.configFile."sway/config".source = pkgs.replaceVars ./sway.config {
-
-    grim = "${pkgs.grim}/bin/grim";
-    wlcopy = "${pkgs.wl-clipboard}/bin/wl-copy";
-    firefox = "${pkgs.firefox}/bin/firefox";
-    i3status = "${pkgs.i3status}/bin/i3status";
-    foot = "${pkgs.foot}/bin/foot";
-    dmenu_run = "${pkgs.dmenu}/bin/dmenu_run";
-    ydotool = "${pkgs.ydotool}/bin/ydotool";
-    swayidle = "${pkgs.swayidle}/bin/swayidle";
-    swaymsg = "${pkgs.sway}/bin/swaymsg";
-    systemctl = "${pkgs.systemd}/bin/systemctl";
-    light = "${pkgs.light}/bin/light";
-    wpctl = "${pkgs.pipewire}/bin/wpctl";
-    sed = "${pkgs.gnused}/bin/sed";
-    bc = "${pkgs.bc}/bin/bc";
-    killall = "${pkgs.killall}/bin/killall";
-    DEFAULT_AUDIO_SINK = "@DEFAULT_AUDIO_SINK@";
-    DEFAULT_AUDIO_SOURCE = "@DEFAULT_AUDIO_SOURCE@";
-
-    lock = lock;
+  xdg.configFile."sway/config".source = pkgs.substitute {
+    name = "sway.config";
+    src = ./sway.config;
+    substitutions = [
+      "--replace" "@grim@" "${pkgs.grim}/bin/grim"
+      "--replace" "@wlcopy@" "${pkgs.wl-clipboard}/bin/wl-copy"
+      "--replace" "@firefox@" "${pkgs.firefox}/bin/firefox"
+      "--replace" "@i3status@" "${pkgs.i3status}/bin/i3status"
+      "--replace" "@foot@" "${pkgs.foot}/bin/foot"
+      "--replace" "@dmenu_run@" "${pkgs.dmenu}/bin/dmenu_run"
+      "--replace" "@ydotool@" "${pkgs.ydotool}/bin/ydotool"
+      "--replace" "@swayidle@" "${pkgs.swayidle}/bin/swayidle"
+      "--replace" "@swaymsg@" "${pkgs.sway}/bin/swaymsg"
+      "--replace" "@systemctl@" "${pkgs.systemd}/bin/systemctl"
+      "--replace" "@light@" "${pkgs.light}/bin/light"
+      "--replace" "@wpctl@" "${pkgs.pipewire}/bin/wpctl"
+      "--replace" "@sed@" "${pkgs.gnused}/bin/sed"
+      "--replace" "@bc@" "${pkgs.bc}/bin/bc"
+      "--replace" "@killall@" "${pkgs.killall}/bin/killall"
+      "--replace" "@lock@" "${lock}"
+    ];
   };
 }
