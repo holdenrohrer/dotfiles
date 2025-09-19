@@ -10,7 +10,7 @@ let
     fi
   '';
   lock = pkgs.writeShellScript "lock" ''
-    exec ${pkgs.swaylock}/bin/swaylock -i "$HOME"/bg/sc -f --indicator-radius 100 -e --clock --text-color 9f19d7 --indicator
+    exec ${pkgs.swaylock-effects}/bin/swaylock -i "$HOME"/bg/sc -f --indicator-radius 100 -e --clock --text-color 9f19d7 --indicator
   '';
 in
 {
