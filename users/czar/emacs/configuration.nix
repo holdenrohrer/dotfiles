@@ -119,6 +119,17 @@
       (add-hook 'ediff-before-setup-hook #'my-store-pre-ediff-winconfig)
       (add-hook 'ediff-suspend-hook #'my-restore-pre-ediff-winconfig)
       (add-hook 'ediff-quit-hook #'my-restore-pre-ediff-winconfig)
+
+      ;; Keep Ediff control panel in the current frame, at the bottom, small
+      (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+      (add-to-list 'display-buffer-alist
+                   '("\\*Ediff Control Panel\\*"
+                     (display-buffer-reuse-window display-buffer-in-side-window)
+                     (side . bottom)
+                     (window-height . 0.2)
+                     (window-parameters . ((no-other-window . t)
+                                           (no-delete-other-windows . t)))))
     '';
   };
  
