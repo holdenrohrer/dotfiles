@@ -15,6 +15,7 @@
         (setenv "OPENROUTER_API_KEY" (password-store-get-field "openrouter" "apikey"))
         (setenv "AIDER_EDIT_FORMAT" "diff")
         (setenv "AIDER_MODEL" "openrouter/openai/gpt-5")
+        (setenv "AIDER_WEAK_MODEL" "openrouter/openai/gpt-4o-mini")
         :custom
         (comint-prompt-read-only t)
         (aidermacs-program "${pkgs.aider-chat}/bin/aider")
