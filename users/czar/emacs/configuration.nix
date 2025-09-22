@@ -33,12 +33,14 @@
       (add-hook 'before-save-hook 'whitespace-cleanup)
 
       ; Fold text at word boundaries
-      (visual-line-mode)
       ; And use the visual-fill-column package to 
       (use-package visual-fill-column
+        :hook
+        ((fundamental-mode . visual-line-mode))
         :config
         (setq-default fill-column 100)
-        (global-visual-fill-column-mode 1))
+        (global-visual-fill-column-mode 1)
+        (global-visual-line-mode 1))
 
       (use-package nix-mode
         :mode "\\.nix\\'")
@@ -77,7 +79,7 @@
       (setq auto-save-file-name-transforms
         '((".*" "~/drafts/emacs/\\1" t)))
       (setq backup-directory-alist '(("." . "~/drafts/emacs/backups")))
- 
+      (setq lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "~/drafts/emacs/locks/\\1" t)))
  
       (use-package direnv
         :config
