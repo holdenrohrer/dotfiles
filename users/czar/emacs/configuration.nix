@@ -6,7 +6,7 @@
   # Emacs configuration
   programs.emacs = {
     enable = true;
-    
+
     extraPackages = epkgs: with epkgs; [
       evil
       evil-collection
@@ -20,7 +20,7 @@
       nix-mode
       undo-tree
     ];
- 
+
     extraConfig = ''
       ;; Basic dark theme
       (load-theme 'wombat t)
@@ -33,7 +33,7 @@
       (add-hook 'before-save-hook 'whitespace-cleanup)
 
       ; Fold text at word boundaries
-      ; And use the visual-fill-column package to 
+      ; And use the visual-fill-column package to
       (use-package visual-fill-column
         :hook
         ((fundamental-mode . visual-line-mode))
@@ -76,25 +76,25 @@
       (use-package dtrt-indent
         :config
         (dtrt-indent-mode 1)
-        (add-hook 'dtrt-indent-adapt-hook 
-          (lambda () 
+        (add-hook 'dtrt-indent-adapt-hook
+          (lambda ()
             (setq-local evil-shift-width dtrt-indent-original-indent))))
 
       (setq auto-save-file-name-transforms
         '((".*" "~/drafts/emacs/\\1" t)))
       (setq backup-directory-alist '(("." . "~/drafts/emacs/backups")))
       (setq lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "~/drafts/emacs/locks/\\1" t)))
- 
+
       (use-package direnv
         :config
         (direnv-mode 1)
         (defun my-direnv-update-after-cd (&rest _)
           "Update direnv environment after changing directories."
           (direnv-update-environment)))
-          
-      
+
+
       (advice-add 'cd :after #'my-direnv-update-after-cd)
- 
+
       ;; Evil mode
       (use-package evil
         :config
@@ -122,17 +122,9 @@
 
       ;; Keep Ediff control panel in the current frame, at the bottom, small
       (setq ediff-window-setup-function 'ediff-setup-windows-plain)
-
-      (add-to-list 'display-buffer-alist
-                   '("\\*Ediff Control Panel\\*"
-                     (display-buffer-reuse-window display-buffer-in-side-window)
-                     (side . bottom)
-                     (window-height . 0.2)
-                     (window-parameters . ((no-other-window . t)
-                                           (no-delete-other-windows . t)))))
     '';
   };
- 
+
   # Core CLI tools
   home.packages = with pkgs; [
     direnv
