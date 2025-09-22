@@ -52,8 +52,12 @@
           (make-directory "~/drafts/undotrees" t))
         (setq undo-tree-history-directory-alist '(("." . "~/drafts/undotrees"))
               undo-tree-auto-save-history t)
+        :hook
+        ((fundamental-mode . undo-tree-mode)
+         (prog-mode . undo-tree-mode)
+         (text-mode . undo-tree-mode))
         :config
-        (global-undo-tree-mode)
+        (global-undo-tree-mode -1)
         :custom
         (evil-undo-system 'undo-tree))
 
