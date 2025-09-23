@@ -56,8 +56,6 @@
         ((fundamental-mode . undo-tree-mode)
          (prog-mode . undo-tree-mode)
          (text-mode . undo-tree-mode))
-        :config
-        (global-undo-tree-mode -1)
         :custom
         (evil-undo-system 'undo-tree))
 
@@ -107,21 +105,13 @@
         :config
         (evil-collection-init))
 
-      ;; Preserve window layout around Ediff
-      (defvar my-ediff-window-config nil)
-
-      (defun my-store-pre-ediff-winconfig ()
-        (setq my-ediff-window-config (current-window-configuration)))
-
-      (defun my-restore-pre-ediff-winconfig ()
-        (set-window-configuration my-ediff-window-config))
-
-      (add-hook 'ediff-before-setup-hook #'my-store-pre-ediff-winconfig)
-      (add-hook 'ediff-suspend-hook #'my-restore-pre-ediff-winconfig)
-      (add-hook 'ediff-quit-hook #'my-restore-pre-ediff-winconfig)
-
       ;; Keep Ediff control panel in the current frame, at the bottom, small
       (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+      (add-hook 'after-change-major-mode-hook
+              (lambda ()
+                  (when (eq major-mode 'fundamental-mode)
+                  (run-hooks 'fundamental-mode-hook))))
     '';
   };
 

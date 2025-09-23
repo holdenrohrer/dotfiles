@@ -85,7 +85,7 @@ in
       "--replace" "@swaymsg@" "${pkgs.sway}/bin/swaymsg"
       "--replace" "@systemctl@" "${pkgs.systemd}/bin/systemctl"
       "--replace" "@light@" "${pkgs.light}/bin/light"
-      "--replace" "@wpctl@" "${pkgs.pipewire}/bin/wpctl"
+      "--replace" "@wpctl@" "${pkgs.wireplumber}/bin/wpctl"
       "--replace" "@sed@" "${pkgs.gnused}/bin/sed"
       "--replace" "@bc@" "${pkgs.bc}/bin/bc"
       "--replace" "@killall@" "${pkgs.killall}/bin/killall"
