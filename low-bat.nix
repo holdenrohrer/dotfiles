@@ -82,4 +82,9 @@ in {
       AccuracySec = "5s";
     };
   };
+
+  services.udev.extraRules = ''
+    # Trigger when AC mains goes online; have systemd run our check.
+    SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ACTION=="add|change", ATTR{online}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}="low-bat-check.service"
+  '';
 }
