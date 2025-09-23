@@ -65,8 +65,6 @@ let
     main "$@"
   '';
 in {
-  environment.systemPackages = [ low-bat ];
-
   systemd.services.low-bat-check = {
     description = "Low battery check (design-based)";
     serviceConfig = {
