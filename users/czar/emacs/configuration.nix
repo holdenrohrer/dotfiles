@@ -19,6 +19,7 @@
       dtrt-indent
       nix-mode
       undo-tree
+      gptel
     ];
 
     extraConfig = ''
