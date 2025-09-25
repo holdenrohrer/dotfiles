@@ -119,6 +119,9 @@
               (lambda ()
                   (when (eq major-mode 'fundamental-mode)
                   (run-hooks 'fundamental-mode-hook))))
+
+      ;; Make C do "normal" TAB after the first tabstop
+      ;; (setq-default c-tab-always-indent nil)
     '';
   };
 
