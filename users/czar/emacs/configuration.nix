@@ -67,17 +67,30 @@
         (defvar sudo-reopen--in-progress nil
           "Non-nil while reopening a buffer via sudo to prevent recursion.")
         (defun sudo-reopen-if-read-only ()
-          "If visiting an existing local file that is not writable, reopen it with sudo.
-Prevents recursive reopening and skips non-file or TRAMP buffers."
+          "If visiting a local, non-sudo path that isn't writable, try reopening via sudo.
+Uses EAFP: attempt sudo-edit unconditionally for unreadable/unwritable targets and
+falls back gracefully if root cannot open or the path remains read-only.
+Prevents recursion and skips TRAMP buffers."
           (unless sudo-reopen--in-progress
             (when (and buffer-file-name
                        (not (file-remote-p buffer-file-name))
                        (not (string-prefix-p "/sudo:" buffer-file-name))
-                       (file-exists-p buffer-file-name)
                        (not (file-writable-p buffer-file-name)))
               (let ((pos (point))
                     (sudo-reopen--in-progress t))
-                (sudo-edit)
+                (condition-case _
+                    (progn
+                      (sudo-edit)
+                      ;; After sudo-edit, only keep sudo buffer if it improved perms.
+                      (when (and (string-prefix-p "/sudo:" (or buffer-file-name ""))
+                                 (not (file-writable-p buffer-file-name)))
+                        ;; Root doesn't help (still not writable), revert to original path.
+                        ;; This preserves EAFP while failing back gracefully.
+                        (revert-buffer t t)))
+                  (error
+                   ;; If sudo-edit fails (e.g., cannot stat in 0700 dir or auth issues),
+                   ;; silently keep the original buffer.
+                   nil))
                 (goto-char pos))))))
 
       (use-package dtrt-indent
