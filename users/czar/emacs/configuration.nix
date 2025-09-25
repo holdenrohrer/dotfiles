@@ -66,6 +66,7 @@
         :config
         (defvar sudo-reopen--in-progress nil
           "Non-nil while reopening a buffer via sudo to prevent recursion.")
+
         (defun sudo-reopen-if-read-only ()
           "If visiting a local, non-sudo path that isn't writable, try reopening via sudo.
 Uses EAFP: attempt sudo-edit unconditionally for unreadable/unwritable targets and
@@ -92,6 +93,34 @@ Prevents recursion and skips TRAMP buffers."
                    ;; silently keep the original buffer.
                    nil))
                 (goto-char pos))))))
+
+        (defun sudo-reopen--try-sudo-on-permission-denied (orig-fun filename &rest args)
+          "Around advice for `find-file-noselect` to try sudo on permission denied.
+If the original call errors with a permission issue, retry opening the same FILENAME
+via sudo (TRAMP) using sudo-edit's filename transformer. Falls back to the original
+error if sudo also fails. Skips remote and already-sudo paths, and prevents recursion."
+          (if (or sudo-reopen--in-progress
+                  (file-remote-p filename)
+                  (string-prefix-p "/sudo:" filename))
+              (apply orig-fun filename args)
+            (condition-case err
+                (apply orig-fun filename args)
+              (file-error
+               (let ((msg (error-message-string err)))
+                 (if (and (string-match-p "Permission denied" msg)
+                          (fboundp 'sudo-edit-filename))
+                     (let* ((sudo-reopen--in-progress t)
+                            (sudo-file (sudo-edit-filename filename)))
+                       (condition-case _
+                           ;; Re-run the original open on the sudo TRAMP path
+                           (apply orig-fun sudo-file args)
+                         (error
+                          ;; sudo failed too: propagate the original error
+                          (signal (car err) (cdr err)))))
+                   ;; Not a permission denial (e.g., no such file): re-signal original
+                   (signal (car err) (cdr err))))))))
+
+        (advice-add 'find-file-noselect :around #'sudo-reopen--try-sudo-on-permission-denied)
 
       (use-package dtrt-indent
         :config
