@@ -64,13 +64,21 @@
         :hook
         (find-file . sudo-reopen-if-read-only)
         :config
+        (defvar sudo-reopen--in-progress nil
+          "Non-nil while reopening a buffer via sudo to prevent recursion.")
         (defun sudo-reopen-if-read-only ()
-          "If file is read-only, reopen it with sudo."
-          (when (and buffer-file-name
-                     (not (file-writable-p buffer-file-name)))
-            (let ((pos (point)))
-              (sudo-edit)
-              (goto-char pos)))))
+          "If visiting an existing local file that is not writable, reopen it with sudo.
+Prevents recursive reopening and skips non-file or TRAMP buffers."
+          (unless sudo-reopen--in-progress
+            (when (and buffer-file-name
+                       (not (file-remote-p buffer-file-name))
+                       (not (string-prefix-p "/sudo:" buffer-file-name))
+                       (file-exists-p buffer-file-name)
+                       (not (file-writable-p buffer-file-name)))
+              (let ((pos (point))
+                    (sudo-reopen--in-progress t))
+                (sudo-edit)
+                (goto-char pos))))))
 
       (use-package dtrt-indent
         :config
