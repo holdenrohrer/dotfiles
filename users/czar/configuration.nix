@@ -18,6 +18,7 @@
       git
       gnupg
       wl-clipboard
+      imagemagickBig
     ];
   };
 

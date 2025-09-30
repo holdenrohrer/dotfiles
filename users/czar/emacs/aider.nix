@@ -1,6 +1,9 @@
 { config, pkgs, ... }:
 
 {
+  home.packages = with pkgs; [
+    aider-chat-with-playwright
+  ];
   # Emacs packages and configuration specifically for Aider/AiderMacs
   programs.emacs = {
     extraPackages = epkgs: with epkgs; [
