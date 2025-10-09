@@ -77,6 +77,7 @@ in
       "--replace" "@grim@" "${pkgs.grim}/bin/grim"
       "--replace" "@wlcopy@" "${pkgs.wl-clipboard}/bin/wl-copy"
       "--replace" "@firefox@" "${pkgs.firefox}/bin/firefox"
+      "--replace" "@emacs@" "${pkgs.emacs}/bin/emacs"
       "--replace" "@i3status@" "${pkgs.i3status}/bin/i3status"
       "--replace" "@foot@" "${pkgs.foot}/bin/foot"
       "--replace" "@dmenu_run@" "${pkgs.dmenu}/bin/dmenu_run"
