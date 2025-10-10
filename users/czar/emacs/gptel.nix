@@ -6,6 +6,7 @@
     extraPackages = epkgs: with epkgs; [
       gptel
       password-store
+      macher
     ];
 
     extraConfig = ''
@@ -38,6 +39,9 @@
           :description "Quick: fast, terse responses using the weak model."
           :system "Be terse and fast. Prefer brief patches and one-liners."
           :model "openrouter/openai/gpt-5-nano"))
+
+      (use-package macher
+        :commands (macher-mode))
     '';
   };
 }
