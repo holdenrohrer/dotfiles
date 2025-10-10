@@ -14,7 +14,7 @@
         :config
         ;; Get OpenRouter API key from password-store.
         (defun my-gptel--openrouter-key ()
-          (password-store-get-field "openrouter" "apikey")))
+          (password-store-get-field "openrouter" "apikey"))
 
 
         ;; Use OpenRouter backend and mirror Aider's model choices.
