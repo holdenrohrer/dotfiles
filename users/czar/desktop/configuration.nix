@@ -89,7 +89,7 @@ in
       "--replace" "@wpctl@" "${pkgs.lib.getExe' pkgs.wireplumber "wpctl"}"
       "--replace" "@sed@" "${pkgs.lib.getExe' pkgs.gnused "sed"}"
       "--replace" "@bc@" "${pkgs.lib.getExe' pkgs.bc "bc"}"
-      "--replace" "@killall@" "${pkks.lib.getExe' pkgs.killall "killall"}"
+      "--replace" "@killall@" "${pkgs.lib.getExe' pkgs.killall "killall"}"
       "--replace" "@lock@" "${lock}"
       "--replace" "@XKB_LAYOUT@" "${osConfig.services.xserver.xkb.layout or ""}"
       "--replace" "@XKB_VARIANT@" "${osConfig.services.xserver.xkb.variant or ""}"
