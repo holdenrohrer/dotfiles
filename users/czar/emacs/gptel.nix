@@ -14,13 +14,8 @@
         :config
         ;; Get OpenRouter API key from password-store.
         (defun my-gptel--openrouter-key ()
-          "Return OpenRouter API key from env, pass, or auth-source."
-          (or
-           (getenv "OPENROUTER_API_KEY")
-           (password-store-get-field "openrouter" "apikey")
-           (let* ((auth (car (auth-source-search :host "openrouter.ai" :require '(:secret))))
-                  (secret (plist-get auth :secret)))
-             (if (functionp secret) (funcall secret) secret))))
+          "Return OpenRouter API key from password-store."
+          (password-store-get-field "openrouter" "apikey"))
 
 
         ;; Use OpenRouter backend and mirror Aider's model choices.
@@ -32,7 +27,7 @@
                 :endpoint "/v1/chat/completions"
                 :key #'my-gptel--openrouter-key))
 
-        (setq gptel-api-key (or (my-gptel--openrouter-key) ""))
+        (setq gptel-api-key (my-gptel--openrouter-key))
         (setq gptel-model "openrouter/openai/gpt-5")
 
         ;; Presets that reflect the roles used in Aider/AiderMacs
