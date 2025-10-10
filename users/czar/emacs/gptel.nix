@@ -10,37 +10,32 @@
 
     extraConfig = ''
       (use-package gptel
-        :commands (gptel gptel-send gptel-menu)
-        :config
-        ;; Get OpenRouter API key from password-store.
-        (defun my-gptel--openrouter-key ()
-          "Return OpenRouter API key from password-store."
-          (password-store-get-field "openrouter" "apikey"))
+      :config
+      ;; Disable auth-source lookup
+      (setq gptel-api-key nil)
 
-
-        ;; Use OpenRouter backend and mirror Aider's model choices.
-        ;; Default model: openrouter/openai/gpt-5
-        ;; Quick/weak model: openrouter/openai/gpt-5-nano
-        (setq gptel-backend
+      ;; Set OpenRouter as the default backend with GPT-5
+      (setq gptel-backend
               (gptel-make-openai "OpenRouter"
-                :host "openrouter.ai/api"
-                :endpoint "/v1/chat/completions"
-                :key #'my-gptel--openrouter-key))
+              :host "openrouter.ai"
+              :endpoint "/api/v1/chat/completions"
+              :stream t
+              :key (lambda () (password-store-get-field "openrouter" "apikey"))
+              :models '("openai/gpt-5"
+                          "anthropic/claude-sonnet-4.5:beta"
+                          "moonshotai/kimi-k2-0905")))
 
-        (setq gptel-api-key (my-gptel--openrouter-key))
-        (setq gptel-model "openrouter/openai/gpt-5")
+      ;; Set GPT-5 as default model
+      (setq gptel-model "openai/gpt-5")
 
-        ;; Presets that reflect the roles used in Aider/AiderMacs
-        (gptel-defpreset architect
-          :description "Architect: concise, minimal-diff responses (mirrors Aider's architect mode)."
-          :system "You are an expert software developer. Provide concise, actionable guidance and prefer responding with minimal unified diffs when changing code."
-          :model "openrouter/openai/gpt-5")
-
-        (gptel-defpreset quick
-          :description "Quick: fast, terse responses using the weak model."
-          :system "Be terse and fast. Prefer brief patches and one-liners."
-          :model "openrouter/openai/gpt-5-nano"))
-
+      ;; Groq Kimi2 preset - forces Groq provider
+      (gptel-make-openai "Groq Kimi2"
+          :host "openrouter.ai"
+          :endpoint "/api/v1/chat/completions"
+          :stream t
+          :key (lambda () (password-store-get-field "openrouter" "apikey"))
+          :models '("moonshotai/kimi-k2-0905")
+          :request-params '(("provider" . (("order" . ["Groq"]))))))
     '';
   };
 }
