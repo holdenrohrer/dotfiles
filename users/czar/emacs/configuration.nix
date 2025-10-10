@@ -4,6 +4,7 @@
   imports = [
     ./aider.nix
     ./sudoedit.nix
+    ./gptel.nix
   ];
 
   # Emacs configuration
