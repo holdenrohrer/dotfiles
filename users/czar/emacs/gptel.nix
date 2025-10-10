@@ -6,7 +6,6 @@
     extraPackages = epkgs: with epkgs; [
       gptel
       password-store
-      macher
     ];
 
     extraConfig = ''
@@ -15,7 +14,17 @@
         :config
         ;; Get OpenRouter API key from password-store.
         (defun my-gptel--openrouter-key ()
-          (password-store-get-field "openrouter" "apikey"))
+          "Return OpenRouter API key from env, pass, or auth-source."
+          (or
+           (getenv "OPENROUTER_API_KEY")
+           (ignore-errors
+             (when (fboundp 'password-store-get-field)
+               (password-store-get-field "openrouter" "apikey")))
+           (ignore-errors
+             (when (fboundp 'auth-source-search)
+               (let* ((auth (car (auth-source-search :host "openrouter.ai" :require '(:secret))))
+                      (secret (plist-get auth :secret)))
+                 (if (functionp secret) (funcall secret) secret))))))
 
 
         ;; Use OpenRouter backend and mirror Aider's model choices.
@@ -25,8 +34,9 @@
               (gptel-make-openai "OpenRouter"
                 :host "openrouter.ai/api"
                 :endpoint "/v1/chat/completions"
-                :key (my-gptel--openrouter-key)))
+                :key #'my-gptel--openrouter-key))
 
+        (setq gptel-api-key (or (my-gptel--openrouter-key) ""))
         (setq gptel-model "openrouter/openai/gpt-5")
 
         ;; Presets that reflect the roles used in Aider/AiderMacs
@@ -40,8 +50,6 @@
           :system "Be terse and fast. Prefer brief patches and one-liners."
           :model "openrouter/openai/gpt-5-nano"))
 
-      (use-package macher
-        :commands (macher-mode))
     '';
   };
 }
