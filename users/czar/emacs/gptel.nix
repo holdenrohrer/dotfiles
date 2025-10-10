@@ -12,16 +12,12 @@
       (use-package gptel
         :commands (gptel gptel-send gptel-menu)
         :config
-        ;; Get OpenRouter API key from env or password-store, like Aider does.
+        ;; Get OpenRouter API key from password-store.
         (defun my-gptel--openrouter-key ()
-          (or (getenv "OPENROUTER_API_KEY")
-              (ignore-errors
-                (when (fboundp 'password-store-get-field)
-                  (password-store-get-field "openrouter" "apikey")))))
+          (ignore-errors
+            (require 'password-store)
+            (password-store-get-field "openrouter" "apikey")))
 
-        (let ((key (my-gptel--openrouter-key)))
-          (when key
-            (setenv "OPENROUTER_API_KEY" key)))
 
         ;; Use OpenRouter backend and mirror Aider's model choices.
         ;; Default model: openrouter/openai/gpt-5
@@ -30,7 +26,7 @@
               (gptel-make-openai "OpenRouter"
                 :host "openrouter.ai/api"
                 :endpoint "/v1/chat/completions"
-                :key (getenv "OPENROUTER_API_KEY")))
+                :key (my-gptel--openrouter-key)))
 
         (setq gptel-model "openrouter/openai/gpt-5")
 
