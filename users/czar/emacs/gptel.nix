@@ -17,14 +17,10 @@
           "Return OpenRouter API key from env, pass, or auth-source."
           (or
            (getenv "OPENROUTER_API_KEY")
-           (ignore-errors
-             (when (fboundp 'password-store-get-field)
-               (password-store-get-field "openrouter" "apikey")))
-           (ignore-errors
-             (when (fboundp 'auth-source-search)
-               (let* ((auth (car (auth-source-search :host "openrouter.ai" :require '(:secret))))
-                      (secret (plist-get auth :secret)))
-                 (if (functionp secret) (funcall secret) secret))))))
+           (password-store-get-field "openrouter" "apikey")
+           (let* ((auth (car (auth-source-search :host "openrouter.ai" :require '(:secret))))
+                  (secret (plist-get auth :secret)))
+             (if (functionp secret) (funcall secret) secret))))
 
 
         ;; Use OpenRouter backend and mirror Aider's model choices.
