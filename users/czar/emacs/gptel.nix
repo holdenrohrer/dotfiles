@@ -3,10 +3,25 @@
 {
   # Emacs packages and configuration for gptel, mirroring Aider's API key/model choices.
   programs.emacs = {
-    extraPackages = epkgs: with epkgs; [
-      gptel
-      password-store
-    ];
+    extraPackages = epkgs: with epkgs;
+      let
+        gptel = melpaBuild {
+          pname = "gptel";
+          version = "unstable-2025-10-10";
+          src = pkgs.fetchFromGitHub {
+            owner = "karthink";
+            repo = "gptel";
+            rev = "main";
+            sha256 = pkgs.lib.fakeSha256;
+          };
+          recipe = pkgs.writeText "gptel-recipe" ''
+            (gptel :repo "karthink/gptel" :fetcher github :branch "main" :files ("*.el"))
+          '';
+        };
+      in [
+        gptel
+        password-store
+      ];
 
     extraConfig = ''
       (use-package gptel
