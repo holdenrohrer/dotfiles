@@ -7,12 +7,12 @@
       let
         gptel = melpaBuild {
           pname = "gptel";
-          version = "unstable-2025-10-10";
+          version = "20251010";
           src = pkgs.fetchFromGitHub {
             owner = "karthink";
             repo = "gptel";
-            rev = "main";
-            sha256 = pkgs.lib.fakeSha256;
+            rev = "d4a057e";
+            sha256 = "sha256-XATIKFJ4p2xdOs8e876vdiE6KdBE2Jeb1EFPe7NaVi4=";
           };
           recipe = pkgs.writeText "gptel-recipe" ''
             (gptel :repo "karthink/gptel" :fetcher github :branch "main" :files ("*.el"))
