@@ -77,7 +77,6 @@ in
       "--replace" "@grim@" "${pkgs.lib.getExe pkgs.grim}"
       "--replace" "@wlcopy@" "${pkgs.lib.getExe' pkgs.wl-clipboard "wl-copy"}"
       "--replace" "@firefox@" "${pkgs.lib.getExe pkgs.firefox}"
-      "--replace" "@emacs@" "${pkgs.lib.getExe config.programs.emacs.finalPackage}"
       "--replace" "@i3status@" "${pkgs.lib.getExe' pkgs.i3status "i3status"}"
       "--replace" "@foot@" "${pkgs.lib.getExe pkgs.foot}"
       "--replace" "@dmenu_run@" "${pkgs.lib.getExe' pkgs.dmenu "dmenu_run"}"
