@@ -25,7 +25,7 @@
           src = pkgs.fetchFromGitHub {
             owner = "kmontag";
             repo = "macher";
-            rev = "main";
+            rev = "4fa8fbb";
             sha256 = "sha256-Ngwocb5k+d8FPQNoWNIxFxImnGqPaTzKz0YX8O+7ugU=";
           };
           recipe = pkgs.writeText "macher-recipe" ''
