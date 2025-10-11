@@ -31,7 +31,7 @@
           recipe = pkgs.writeText "macher-recipe" ''
             (macher :repo "kmontag/macher" :fetcher github :branch "main" :files ("*.el"))
           '';
-          deps = [ gptel ];
+          packageRequires = [ gptel ];
         };
       in [
         gptel
