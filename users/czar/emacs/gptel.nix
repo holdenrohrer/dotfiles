@@ -18,8 +18,23 @@
             (gptel :repo "karthink/gptel" :fetcher github :branch "main" :files ("*.el"))
           '';
         };
+
+        macher = melpaBuild {
+          pname = "macher";
+          version = "20251010";
+          src = pkgs.fetchFromGitHub {
+            owner = "kmontag";
+            repo = "macher";
+            rev = "main";
+            sha256 = "sha256-Ngwocb5k+d8FPQNoWNIxFxImnGqPaTzKz0YX8O+7ugU=";
+          };
+          recipe = pkgs.writeText "macher-recipe" ''
+            (macher :repo "kmontag/macher" :fetcher github :branch "main" :files ("*.el"))
+          '';
+        };
       in [
         gptel
+        macher
         password-store
       ];
 
@@ -51,6 +66,12 @@
             :key (lambda () (password-store-get-field "openrouter" "apikey"))
             :models '("moonshotai/kimi-k2-0905")
             :request-params '(("provider" . (("order" . ["Groq"]))))))
+
+      (use-package macher
+        :config
+        ;; Use org UI and install presets into gptel
+        (setq macher-action-buffer-ui 'org)
+        (macher-install))
     '';
   };
 }
