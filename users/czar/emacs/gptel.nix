@@ -33,9 +33,26 @@
           '';
           packageRequires = [ gptel ];
         };
+
+        # Package not in MELPA; fetch from GitHub directly
+        gptelMagit = melpaBuild {
+          pname = "gptel-magit";
+          version = "20251010";
+          src = pkgs.fetchFromGitHub {
+            owner = "ragnard";
+            repo = "gptel-magit";
+            # Pin to branch; replace with a commit and real sha256 after prefetch
+            rev = "f27c018";
+            sha256 = "sha256-AoWGHeO6CPQCuyASOh+xo6FzC2h9Nwdq1nEDNaU0WMs";
+          };
+          recipe = pkgs.writeText "gptel-magit-recipe" ''
+            (gptel-magit :repo "ragnard/gptel-magit" :fetcher github :branch "main" :files ("*.el"))
+          '';
+          packageRequires = [ gptel magit ];
+        };
       in [
         gptel
-        gptel-magit
+        gptelMagit
         macher
         password-store
       ];
@@ -147,7 +164,7 @@
                     (apply orig-fun args)
                   (user-error "File inclusion cancelled by user"))
               (apply orig-fun args))))
-        
+
         (advice-add 'macher-read-file :around #'macher-read-file-confirm-size)
       )
     '';
