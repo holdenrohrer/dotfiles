@@ -68,6 +68,7 @@ in
     feh
     anki
     prismlauncher
+    wl-clipboard
   ];
 
   xdg.configFile."sway/config".source = pkgs.substitute {

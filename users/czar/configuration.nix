@@ -17,8 +17,9 @@
     packages = with pkgs; [
       git
       gnupg
-      wl-clipboard
       imagemagickBig
+      nmap
+      busybox
     ];
   };
 
