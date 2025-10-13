@@ -34,10 +34,10 @@
         "projects"
         "drafts"
         "games"
-        ".wine"
         ".mutt"
         ".local/share/Anki2"
         ".local/share/PrismLauncher"
+        ".local/share/lutris"
       ];
     };
   };
@@ -83,6 +83,13 @@
     enable = true;
     enable32Bit = true;
   };
+
+  # Such that lutris is permitted to use steam subsystems
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "steam"
+    "steam-unwrapped"
+  ];
+
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
