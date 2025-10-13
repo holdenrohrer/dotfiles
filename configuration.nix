@@ -34,6 +34,7 @@
         "projects"
         "drafts"
         "games"
+        ".wine"
         ".mutt"
         ".local/share/Anki2"
         ".local/share/PrismLauncher"
@@ -75,6 +76,12 @@
       title = 8.8.8.8
       host = 8.8.8.8
      '';
+  };
+
+  # Installed to support SPORE on WINE
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true;
   };
 
   # Use the systemd-boot EFI boot loader.
