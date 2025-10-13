@@ -68,6 +68,7 @@ in
     feh
     anki
     prismlauncher
+    lutris
     wl-clipboard
   ];
 
