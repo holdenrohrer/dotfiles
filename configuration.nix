@@ -33,6 +33,7 @@
         ".password-store"
         "projects"
         "drafts"
+        "games"
         ".mutt"
         ".local/share/Anki2"
         ".local/share/PrismLauncher"
