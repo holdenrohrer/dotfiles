@@ -38,6 +38,7 @@
         ".local/share/Anki2"
         ".local/share/PrismLauncher"
         ".local/share/lutris"
+        ".local/share/direnv/allow"
       ];
     };
   };
