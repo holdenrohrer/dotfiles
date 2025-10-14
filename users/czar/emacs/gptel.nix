@@ -71,7 +71,7 @@
                 :stream t
                 :key (lambda () (password-store-get-field "openrouter" "apikey"))
                 :models '("openai/gpt-5"
-                            "anthropic/claude-sonnet-4.5:beta"
+                            "anthropic/claude-sonnet-4.5"
                             "moonshotai/kimi-k2-0905")))
 
         ;; Set GPT-5 as default model
