@@ -22,8 +22,8 @@
           src = pkgs.fetchFromGitHub {
             owner = "holdenrohrer";
             repo = "macher";
-            rev = "main";
-            sha256 = "sha256-Ngwocb5k+d8FPQNoWNIxFxImnGqPaTzKz0YX8O+7ugU=";
+            rev = "4ed3074";
+            sha256 = "sha256-oc1xkf4kw+IXbsY43NCAA1wH+gVHSv4+ueGU5gQzJUI=";
           };
           packageRequires = [ gptel ];
         };
