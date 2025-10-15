@@ -28,14 +28,12 @@
           packageRequires = [ gptel ];
         };
 
-        # Package not in MELPA; fetch from GitHub directly
         gptelMagit = melpaBuild {
           pname = "gptel-magit";
           version = "20251010";
           src = pkgs.fetchFromGitHub {
             owner = "ragnard";
             repo = "gptel-magit";
-            # Pin to branch; replace with a commit and real sha256 after prefetch
             rev = "f27c018";
             sha256 = "sha256-AoWGHeO6CPQCuyASOh+xo6FzC2h9Nwdq1nEDNaU0WMs";
           };
@@ -68,6 +66,8 @@
         ;; Set GPT-5 as default model
         (setq gptel-model "openai/gpt-5")
 
+        (setq gptel-default-mode 'org-mode)
+
         ;; Groq Kimi2 preset - forces Groq provider
         (gptel-make-openai "Groq Kimi2"
             :host "openrouter.ai"
@@ -82,8 +82,6 @@
 
       (use-package macher
         :config
-        ;; Use org UI and install presets into gptel
-        (setq macher-action-buffer-ui 'org)
         (macher-install)
 
         ;; Fix 3
