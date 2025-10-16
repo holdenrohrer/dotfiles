@@ -184,6 +184,7 @@
     unzip
     mutt
     localsend
+    niv
   ];
 
   services.fwupd.enable = true;
