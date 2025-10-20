@@ -79,7 +79,10 @@
      '';
   };
 
-  services.avahi.enable = true;
+  services.avahi ={
+    enable = true;
+    nssmdns4 = true;
+  };
 
   # Installed to support SPORE on WINE
   hardware.graphics = {
