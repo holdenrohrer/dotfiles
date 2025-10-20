@@ -190,6 +190,7 @@
     mutt
     localsend
     niv
+    nix-index
   ];
 
   services.fwupd.enable = true;
