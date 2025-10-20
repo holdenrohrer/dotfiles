@@ -19,7 +19,6 @@
       gnupg
       imagemagickBig
       nmap
-      busybox
     ];
   };
 
