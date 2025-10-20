@@ -39,6 +39,7 @@
         ".local/share/PrismLauncher"
         ".local/share/lutris"
         ".local/share/direnv/allow"
+        ".cache/nix-index"
       ];
     };
   };
