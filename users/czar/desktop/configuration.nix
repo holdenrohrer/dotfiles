@@ -70,6 +70,7 @@ in
     prismlauncher
     lutris
     wl-clipboard
+    adwaita-icon-theme
   ];
 
   xdg.configFile."sway/config".source = pkgs.substitute {
