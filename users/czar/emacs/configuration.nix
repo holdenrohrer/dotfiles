@@ -39,8 +39,6 @@
       ; Fold text at word boundaries
       ; And use the visual-fill-column package to
       (use-package visual-fill-column
-        :hook
-        ((fundamental-mode . visual-line-mode))
         :config
         (setq-default fill-column 100)
         (global-visual-fill-column-mode 1)
