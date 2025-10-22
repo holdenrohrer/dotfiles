@@ -23,7 +23,7 @@
             owner = "holdenrohrer";
             repo = "macher";
             rev = "main";
-            sha256 = "sha256-YirxcHzR4JqAgriZ6f97ysoo6pEeHjz0FZml4qAgAco=";
+            sha256 = "sha256-f6mHmvqkECs10UpCIPr6Zj215wkJ0GKujQQW+XlZcWY=";
           };
           packageRequires = [ gptel ];
         };
