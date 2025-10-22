@@ -9,7 +9,24 @@
     home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Impermanence for persistent storage
     impermanence.url = "github:nix-community/impermanence";
+
+    # Emacs packages from GitHub
+    gptel-src = {
+      url = "github:karthink/gptel/d4a057e";
+      flake = false;
+    };
+
+    macher-src = {
+      url = "github:holdenrohrer/macher/main";
+      flake = false;
+    };
+
+    gptel-magit-src = {
+      url = "github:ragnard/gptel-magit/f27c018";
+      flake = false;
+    };
   };
 
   outputs = {
@@ -17,25 +34,35 @@
     impermanence,
     nixpkgs,
     home-manager,
+    gptel-src,
+    macher-src,
+    gptel-magit-src,
     ...
   } @ inputs: let
     inherit (self) outputs;
-  in {
-    imports = [
-      inputs.home-manager.nixosModules.home-manager
-    ];
+    system = "x86_64-linux";
 
+    # Shared configuration values that need to be passed to home-manager
+    sharedConfig = {
+      keyboard = {
+        layout = "us,us";
+        variant = "dvp,";
+        options = "caps:escape,lv3:ralt_switch_multikey,grp:lalt_lshift_toggle";
+      };
+    };
+  in {
     nixosConfigurations = {
       nixos = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        # > Our main nixos configuration file <
-        modules = [./configuration.nix
-        impermanence.nixosModules.impermanence
-        home-manager.nixosModules.home-manager
+        inherit system;
+        specialArgs = { inherit inputs outputs sharedConfig; };
+        modules = [
+          ./configuration.nix
+          impermanence.nixosModules.impermanence
+          home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = { inherit inputs outputs sharedConfig; };
 
             # Base configurations
             home-manager.users.czar = import ./users/czar/configuration.nix;

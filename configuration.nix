@@ -2,7 +2,7 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, outputs, sharedConfig, ... }:
 
 {
   imports =
@@ -130,9 +130,9 @@
 
 
   # Configure keymap in X11
-  services.xserver.xkb.layout = "us,us";
-  services.xserver.xkb.variant = "dvp,";
-  services.xserver.xkb.options = "caps:escape,lv3:ralt_switch_multikey,grp:lalt_lshift_toggle";
+  services.xserver.xkb.layout = sharedConfig.keyboard.layout;
+  services.xserver.xkb.variant = sharedConfig.keyboard.variant;
+  services.xserver.xkb.options = sharedConfig.keyboard.options;
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -190,7 +190,6 @@
     unzip
     mutt
     localsend
-    niv
     nix-index
   ];
 

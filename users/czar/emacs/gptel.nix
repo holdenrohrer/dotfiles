@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, outputs, sharedConfig, ... }:
 
 {
   # Emacs packages and configuration for gptel, mirroring Aider's API key/model choices.
@@ -8,35 +8,20 @@
         gptel = melpaBuild {
           pname = "gptel";
           version = "20251010";
-          src = pkgs.fetchFromGitHub {
-            owner = "karthink";
-            repo = "gptel";
-            rev = "d4a057e";
-            sha256 = "sha256-XATIKFJ4p2xdOs8e876vdiE6KdBE2Jeb1EFPe7NaVi4=";
-          };
+          src = inputs.gptel-src;
         };
 
         macher = melpaBuild {
           pname = "macher";
           version = "20251015";
-          src = pkgs.fetchFromGitHub {
-            owner = "holdenrohrer";
-            repo = "macher";
-            rev = "main";
-            sha256 = "sha256-f6mHmvqkECs10UpCIPr6Zj215wkJ0GKujQQW+XlZcWY=";
-          };
+          src = inputs.macher-src;
           packageRequires = [ gptel ];
         };
 
         gptelMagit = melpaBuild {
           pname = "gptel-magit";
           version = "20251010";
-          src = pkgs.fetchFromGitHub {
-            owner = "ragnard";
-            repo = "gptel-magit";
-            rev = "f27c018";
-            sha256 = "sha256-AoWGHeO6CPQCuyASOh+xo6FzC2h9Nwdq1nEDNaU0WMs";
-          };
+          src = inputs.gptel-magit-src;
           packageRequires = [ gptel magit ];
         };
       in [

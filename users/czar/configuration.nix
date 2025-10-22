@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, outputs, sharedConfig, ... }:
 {
   imports = [
     ./emacs/configuration.nix

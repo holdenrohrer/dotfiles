@@ -1,5 +1,39 @@
 {
   "nodes": {
+    "gptel-magit-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1747729990,
+        "narHash": "sha256-AoWGHeO6CPQCuyASOh+xo6FzC2h9Nwdq1nEDNaU0WMs=",
+        "owner": "ragnard",
+        "repo": "gptel-magit",
+        "rev": "f27c01821b67ed99ddf705c2b995f78b71394d8b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ragnard",
+        "ref": "f27c018",
+        "repo": "gptel-magit",
+        "type": "github"
+      }
+    },
+    "gptel-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1760072862,
+        "narHash": "sha256-XATIKFJ4p2xdOs8e876vdiE6KdBE2Jeb1EFPe7NaVi4=",
+        "owner": "karthink",
+        "repo": "gptel",
+        "rev": "d4a057e561e9945d2fd2081ea7b119f79e353d6e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "karthink",
+        "ref": "d4a057e",
+        "repo": "gptel",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -36,6 +70,23 @@
         "type": "github"
       }
     },
+    "macher-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1761110281,
+        "narHash": "sha256-f6mHmvqkECs10UpCIPr6Zj215wkJ0GKujQQW+XlZcWY=",
+        "owner": "holdenrohrer",
+        "repo": "macher",
+        "rev": "4ea471e3b818dca7717291a1c09d961f45ac208c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "holdenrohrer",
+        "ref": "main",
+        "repo": "macher",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1756886854,
@@ -54,8 +105,11 @@
     },
     "root": {
       "inputs": {
+        "gptel-magit-src": "gptel-magit-src",
+        "gptel-src": "gptel-src",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
+        "macher-src": "macher-src",
         "nixpkgs": "nixpkgs"
       }
     }
