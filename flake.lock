@@ -73,27 +73,26 @@
     "macher-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1761110281,
-        "narHash": "sha256-f6mHmvqkECs10UpCIPr6Zj215wkJ0GKujQQW+XlZcWY=",
-        "owner": "holdenrohrer",
-        "repo": "macher",
-        "rev": "4ea471e3b818dca7717291a1c09d961f45ac208c",
-        "type": "github"
+        "lastModified": 1761285850,
+        "narHash": "sha256-EhwZuV28bnzG/oTyKkavAjozyewP/77PelQkodnnJOI=",
+        "ref": "refs/heads/main",
+        "rev": "4d3b5e5762ce020c4157bf3d8a075bb60fa62226",
+        "revCount": 31,
+        "type": "git",
+        "url": "file:///home/czar/projects/macher"
       },
       "original": {
-        "owner": "holdenrohrer",
-        "ref": "main",
-        "repo": "macher",
-        "type": "github"
+        "type": "git",
+        "url": "file:///home/czar/projects/macher"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1756886854,
-        "narHash": "sha256-6tooT142NLcFjt24Gi4B0G1pgWLvfw7y93sYEfSHlLI=",
+        "lastModified": 1761016216,
+        "narHash": "sha256-G/iC4t/9j/52i/nm+0/4ybBmAF4hzR8CNHC75qEhjHo=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "0e6684e6c5755325f801bda1751a8a4038145d7d",
+        "rev": "481cf557888e05d3128a76f14c76397b7d7cc869",
         "type": "github"
       },
       "original": {

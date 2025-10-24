@@ -19,7 +19,7 @@
     };
 
     macher-src = {
-      url = "github:holdenrohrer/macher/main";
+      url = "git+file:///home/czar/projects/macher";
       flake = false;
     };
 
