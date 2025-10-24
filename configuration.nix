@@ -96,6 +96,10 @@
     "steam"
     "steam-unwrapped"
   ];
+  # And one of its out-of-date dependencies
+  nixpkgs.config.permittedInsecurePackages = [
+    "mbedtls-2.28.10"
+  ];
 
 
   # Use the systemd-boot EFI boot loader.
