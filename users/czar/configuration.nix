@@ -19,6 +19,7 @@
       gnupg
       imagemagickBig
       nmap
+      just
     ];
   };
 
