@@ -23,6 +23,7 @@
       dtrt-indent
       nix-mode
       undo-tree
+      meson-mode
     ];
 
     extraConfig = ''
@@ -44,8 +45,11 @@
         (global-visual-fill-column-mode 1)
         (global-visual-line-mode 1))
 
+      ;; Language modes
       (use-package nix-mode
         :mode "\\.nix\\'")
+      (use-package meson-mode
+        :mode "meson.build")
 
       ;; undo-tree
       (use-package undo-tree
