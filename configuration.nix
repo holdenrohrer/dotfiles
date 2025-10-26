@@ -15,7 +15,6 @@
   environment.persistence."/persist" = {
     hideMounts = true;
     directories = [
-      "/etc/nixos"
       "/etc/wireguard"
       "/var/lib/nixos"
     ];
