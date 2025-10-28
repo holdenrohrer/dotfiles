@@ -14,17 +14,17 @@
 
     # Emacs packages from GitHub
     gptel-src = {
-      url = "github:karthink/gptel/d4a057e";
+      url = "github:karthink/gptel/master";
       flake = false;
     };
 
     macher-src = {
-      url = "git+file:///home/czar/projects/macher";
+      url = "git+file:///home/czar/projects/macher?rev=4ed3074cacc41abcb8fbe09373753492787ac785";
       flake = false;
     };
 
     gptel-magit-src = {
-      url = "github:ragnard/gptel-magit/f27c018";
+      url = "github:ragnard/gptel-magit/main";
       flake = false;
     };
   };
