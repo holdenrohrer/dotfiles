@@ -119,7 +119,7 @@
         description = "HP LaserJet CP1025NW";
         location = "Home";
         deviceUri = "dnssd://HP%20LaserJet%20CP1025nw._pdl-datastream._tcp.local/";
-        model = "drv:///hp/hpcups.drv/hp-colorlaserjet_cp1025nw.ppd";
+        model = "HP/hp-laserjet_cp1025nw.ppd.gz";
       }
     ];
   };
