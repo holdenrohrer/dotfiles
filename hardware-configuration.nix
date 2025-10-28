@@ -111,4 +111,16 @@
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
+  hardware.printers = {
+    ensurePrinters = [
+      {
+        name = "holdens_printer";
+        description = "HP LaserJet CP1025NW";
+        location = "Home";
+        deviceUri = "dnssd://HP%20LaserJet%20CP1025nw._pdl-datastream._tcp.local/";
+        model = "drv:///hp/hpcups.drv/hp-colorlaserjet_cp1025nw.ppd";
+      }
+    ];
+  };
 }
