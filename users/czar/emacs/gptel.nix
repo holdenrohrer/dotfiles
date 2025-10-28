@@ -11,12 +11,12 @@
           src = inputs.gptel-src;
         };
 
-        macher = melpaBuild {
-          pname = "macher";
-          version = "20251015";
-          src = inputs.macher-src;
-          packageRequires = [ gptel ];
-        };
+        #macher = melpaBuild {
+        #  pname = "macher";
+        #  version = "20251015";
+        #  src = inputs.macher-src;
+        #  packageRequires = [ gptel ];
+        #};
 
         gptelMagit = melpaBuild {
           pname = "gptel-magit";
