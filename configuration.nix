@@ -92,6 +92,7 @@
 
   # Such that lutris is permitted to use steam subsystems
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "hplip"
     "steam"
     "steam-unwrapped"
   ];
@@ -139,6 +140,9 @@
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+  services.printing.drivers = [
+    pkgs.hplipWithPlugin
+  ];
 
 
   # Enable sound.
