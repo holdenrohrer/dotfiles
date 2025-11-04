@@ -19,7 +19,7 @@
     };
 
     macher-src = {
-      url = "git+file:///home/czar/projects/macher?rev=4ed3074cacc41abcb8fbe09373753492787ac785";
+      url = "git+file:///home/czar/projects/macher?rev=9d83af3faabdb486ddb5bde2e564ab586d3fc1d8";
       flake = false;
     };
 

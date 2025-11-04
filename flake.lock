@@ -73,16 +73,16 @@
     "macher-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1760511114,
-        "narHash": "sha256-oc1xkf4kw+IXbsY43NCAA1wH+gVHSv4+ueGU5gQzJUI=",
+        "lastModified": 1760560577,
+        "narHash": "sha256-YirxcHzR4JqAgriZ6f97ysoo6pEeHjz0FZml4qAgAco=",
         "ref": "refs/heads/main",
-        "rev": "4ed3074cacc41abcb8fbe09373753492787ac785",
-        "revCount": 28,
+        "rev": "9d83af3faabdb486ddb5bde2e564ab586d3fc1d8",
+        "revCount": 29,
         "type": "git",
         "url": "file:///home/czar/projects/macher"
       },
       "original": {
-        "rev": "4ed3074cacc41abcb8fbe09373753492787ac785",
+        "rev": "9d83af3faabdb486ddb5bde2e564ab586d3fc1d8",
         "type": "git",
         "url": "file:///home/czar/projects/macher"
       }

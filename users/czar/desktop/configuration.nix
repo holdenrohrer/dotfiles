@@ -73,6 +73,20 @@ in
     adwaita-icon-theme
   ];
 
+  xdg.portal = {
+    enable = true;
+    config = {
+      common = {
+        default = [
+          "wlr"
+        ];
+      };
+    };
+    extraPortals = [
+      pkgs.xdg-desktop-portal-wlr
+    ];
+  };
+
   xdg.configFile."sway/config".source = pkgs.substitute {
     name = "sway.config";
     src = ./sway.config;
