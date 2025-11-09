@@ -25,6 +25,9 @@
       nix-mode
       undo-tree
       meson-mode
+      lsp-mode
+      lsp-ui
+      flycheck
     ];
 
     extraConfig = ''
