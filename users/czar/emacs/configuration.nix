@@ -85,16 +85,9 @@
       (use-package direnv
         :config
         (direnv-mode 1)
-        (defvar my-global-default-directory default-directory
-          "Global default directory that buffers should use unless manually changed with :cd.")
-        (add-hook 'find-file-hook
-                  (lambda ()
-                    (setq default-directory my-global-default-directory)))
         (defun my-direnv-update-after-cd (&rest _)
           "Update direnv environment after changing directories."
-          (direnv-update-environment)
-          (setq my-global-default-directory default-directory)))
-
+          (direnv-update-environment)))
 
       (advice-add 'cd :after #'my-direnv-update-after-cd)
 
