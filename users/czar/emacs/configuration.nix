@@ -5,6 +5,7 @@
     ./aider.nix
     ./sudoedit.nix
     ./gptel.nix
+    ./haskell.nix
   ];
 
   # Emacs configuration
