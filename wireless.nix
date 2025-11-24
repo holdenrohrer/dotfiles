@@ -9,7 +9,7 @@
 
   networking.dhcpcd.extraConfig = ''
     nolink
-    persistent
   '';
+  #  persistent
 }
 

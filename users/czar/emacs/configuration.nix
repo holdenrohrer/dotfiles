@@ -28,6 +28,7 @@
       lsp-mode
       lsp-ui
       flycheck
+      git-timemachine
     ];
 
     extraConfig = ''
@@ -113,6 +114,9 @@
 
       ;; Make C do "normal" TAB after the first tabstop
       ;; (setq-default c-tab-always-indent nil)
+
+      (use-package flycheck
+        :hook ((after-init-hook . global-flycheck-mode)))
     '';
   };
 
