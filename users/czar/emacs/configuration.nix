@@ -6,6 +6,7 @@
     ./sudoedit.nix
     ./gptel.nix
     ./haskell.nix
+    ./lean.nix
   ];
 
   # Emacs configuration

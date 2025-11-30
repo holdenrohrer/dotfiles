@@ -95,6 +95,7 @@
     "hplip"
     "steam"
     "steam-unwrapped"
+    "claude-code"
   ];
   # And one of its out-of-date dependencies
   nixpkgs.config.permittedInsecurePackages = [

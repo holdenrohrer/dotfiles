@@ -20,6 +20,7 @@
       imagemagickBig
       nmap
       just
+      claude-code
     ];
   };
 
