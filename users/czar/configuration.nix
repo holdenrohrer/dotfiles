@@ -21,6 +21,7 @@
       nmap
       just
       claude-code
+      texliveFull
     ];
   };
 
