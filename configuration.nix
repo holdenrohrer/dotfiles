@@ -44,7 +44,7 @@
   };
 
 
-  services.logind = {
+  services.logind.settings.Login = {
     powerKey = "hibernate";
     lidSwitch = "hybrid-sleep";
     lidSwitchExternalPower = "hybrid-sleep";
