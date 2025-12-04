@@ -44,12 +44,12 @@
                 :endpoint "/api/v1/chat/completions"
                 :stream t
                 :key (lambda () (password-store-get-field "openrouter" "apikey"))
-                :models '("openai/gpt-5"
-                            "anthropic/claude-sonnet-4.5"
-                            "moonshotai/kimi-k2-0905")))
+                :models '(openai/gpt-5
+                            anthropic/claude-sonnet-4.5
+                            moonshotai/kimi-k2-0905)))
 
         ;; Set GPT-5 as default model
-        (setq gptel-model "openai/gpt-5")
+        (setq gptel-model 'openai/gpt-5)
 
         (setq gptel-default-mode 'org-mode)
 

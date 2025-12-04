@@ -79,6 +79,8 @@
      '';
   };
 
+  virtualisation.docker.enable = true;
+
   services.avahi ={
     enable = true;
     nssmdns4 = true;
