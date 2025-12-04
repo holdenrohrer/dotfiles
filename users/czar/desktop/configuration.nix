@@ -36,16 +36,18 @@ in
 
   programs.git = {
     enable = true;
-    userName = "Holden Rohrer";
-    userEmail = "hr@hrhr.dev";
-    signing = {
-      key = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
-      signByDefault = true;
-    };
-    extraConfig = {
+    settings = {
+      user = {
+        name = "Holden Rohrer";
+        email = "hr@hrhr.dev";
+      };
       pull.rebase = false;
       init.defaultBranch = "main";
       core.autocrlf = false;
+    };
+    signing = {
+      key = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
+      signByDefault = true;
     };
   };
 
