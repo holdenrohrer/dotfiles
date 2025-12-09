@@ -6,6 +6,7 @@
     stack
     ormolu
     hlint
+    haskell-language-server
   ];
 
   home.file.".stack/config.yaml".text = ''
@@ -25,7 +26,6 @@
         :after (lsp-mode haskell-mode)
         :hook (haskell-mode . lsp)
         :config
-        (setq lsp-haskell-server-path "${pkgs.haskell-language-server}/bin/haskell-language-server-wrapper")
         (setq lsp-haskell-formatting-provider "ormolu"))
     '';
   };
