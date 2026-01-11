@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, outputs, sharedConfig, ... }:
+{ config, lib, pkgs, inputs, outputs, sharedConfig, ... }:
 {
   imports = [
     ./emacs/configuration.nix
@@ -29,6 +29,16 @@
       texliveFull
     ];
   };
+
+  home.activation.reloadSwayAndEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if command -v swaymsg >/dev/null 2>&1; then
+      swaymsg reload >/dev/null 2>&1 || true
+    fi
+
+    if command -v emacsclient >/dev/null 2>&1; then
+      emacsclient -a "" -e "(load user-init-file)" >/dev/null 2>&1 || true
+    fi
+  '';
 
   # Fixing the XDG Directory Structure
   xdg.userDirs = {
