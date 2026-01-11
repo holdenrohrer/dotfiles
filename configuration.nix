@@ -194,7 +194,6 @@
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
     sl
-    vim
     (pass.withExtensions (exts: [ exts.pass-otp ]))
     git
     wireguard-tools

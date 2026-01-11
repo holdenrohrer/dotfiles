@@ -41,6 +41,18 @@
       ;; Basic dark theme
       (load-theme 'wombat t)
 
+      ;; Gentler UI: remove chrome (scroll bars, menu/tool bars, tab bar).
+      (when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+      (when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+      (when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+      (when (fboundp 'tab-bar-mode) (tab-bar-mode -1))
+
+      ;; Match foot's alpha=0.7 (70% opaque background).
+      ;; (Wayland-friendly in recent Emacs via alpha-background.)
+      (add-to-list 'default-frame-alist '(alpha-background . 70))
+      (when (display-graphic-p)
+        (set-frame-parameter nil 'alpha-background 70))
+
       ;; Enable emacsclient
       (require 'server)
       (unless (server-running-p)
@@ -130,6 +142,13 @@
         :hook ((after-init-hook . global-flycheck-mode)))
 
       (use-package eat)
+
+      (defun czar/eat-new ()
+        "Open a new Eat shell instead of reusing the current terminal buffer."
+        (interactive)
+        ;; Eat supports creating a new terminal when invoked with a prefix arg.
+        (let ((current-prefix-arg '(4)))
+          (call-interactively #'eat)))
 
       (use-package claude-code-ide
         :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
