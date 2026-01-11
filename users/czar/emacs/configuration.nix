@@ -33,6 +33,8 @@
     ];
 
     extraConfig = ''
+      ;; Avoid (require) and stick to (use-package)
+
       ;; Basic dark theme
       (load-theme 'wombat t)
 
