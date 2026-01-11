@@ -47,25 +47,27 @@
       export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$user/bin:$PATH"
 
       # Make systemctl --user usable during activation (no GUI env by default).
-      export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$uid}"
-      if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "$XDG_RUNTIME_DIR/bus" ]; then
+      # NOTE: This is a *shell* parameter expansion; escape `${...}` so Nix
+      # doesn't try to treat it as Nix interpolation.
+      export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$uid}"
+      if [ -z "''${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "$XDG_RUNTIME_DIR/bus" ]; then
         export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
       fi
 
       echo "user=$user uid=$uid"
-      echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-<unset>}"
-      echo "DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-<unset>}"
+      echo "XDG_RUNTIME_DIR=''${XDG_RUNTIME_DIR:-<unset>}"
+      echo "DBUS_SESSION_BUS_ADDRESS=''${DBUS_SESSION_BUS_ADDRESS:-<unset>}"
       echo "PATH=$PATH"
 
       # Reload Sway even when SWAYSOCK isn't exported (common during HM activation).
       if swaymsg_path="$(command -v swaymsg 2>/dev/null)"; then
-        sway_sock="${SWAYSOCK:-}"
+        sway_sock="''${SWAYSOCK:-}"
         if [ -z "$sway_sock" ]; then
           sway_sock="$(ls -t "/run/user/$uid"/sway-ipc.*.sock 2>/dev/null | head -n 1 || true)"
         fi
 
         echo "swaymsg=$swaymsg_path"
-        echo "SWAYSOCK=${SWAYSOCK:-<unset>} resolved=${sway_sock:-<none>}"
+        echo "SWAYSOCK=''${SWAYSOCK:-<unset>} resolved=''${sway_sock:-<none>}"
 
         if [ -n "$sway_sock" ]; then
           "$swaymsg_path" -s "$sway_sock" reload
