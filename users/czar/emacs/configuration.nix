@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./aider.nix
     ./sudoedit.nix
     ./gptel.nix
     ./haskell.nix
@@ -30,6 +29,7 @@
       lsp-ui
       flycheck
       git-timemachine
+      eat
     ];
 
     extraConfig = ''
@@ -126,22 +126,13 @@
       (use-package flycheck
         :hook ((after-init-hook . global-flycheck-mode)))
 
-      ;; Claude Code (CLI) integration
-      (require 'subr-x)
-      (require 'project)
+      (use-package eat)
 
-      (defun czar/claude-code ()
-        "Run `claude-code` in an `ansi-term` buffer, rooted at the current project if any."
-        (interactive)
-        (let* ((exe (or (executable-find "claude-code")
-                        (user-error "claude-code not found in PATH")))
-               (default-directory
-                 (or (when-let ((proj (project-current nil)))
-                       (project-root proj))
-                     default-directory)))
-          (ansi-term exe "claude-code")))
-
-      (global-set-key (kbd "C-c c") #'czar/claude-code)
+      (use-package claude-code-ide
+        :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
+        :bind ("C-c C-'" . claude-code-ide-menu)
+        :config
+        (claude-code-ide-emacs-tools-setup))  ; enables MCP tools
     '';
   };
 
