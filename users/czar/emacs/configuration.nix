@@ -8,6 +8,9 @@
     ./lean.nix
   ];
 
+  # Keep an Emacs server running so emacsclient always has a socket.
+  services.emacs.enable = true;
+
   # Emacs configuration
   programs.emacs = {
     enable = true;

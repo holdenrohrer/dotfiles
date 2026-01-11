@@ -31,13 +31,36 @@
   };
 
   home.activation.reloadSwayAndEmacs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if command -v swaymsg >/dev/null 2>&1; then
-      swaymsg reload >/dev/null 2>&1 || true
-    fi
+    log_dir="$HOME/.local/state/home-manager"
+    mkdir -p "$log_dir"
+    log_file="$log_dir/reload-sway-emacs.log"
 
-    if command -v emacsclient >/dev/null 2>&1; then
-      emacsclient -a "" -e "(load user-init-file)" >/dev/null 2>&1 || true
-    fi
+    {
+      echo "---- $(date -Iseconds) ----"
+
+      # Reload Sway even when SWAYSOCK isn't exported (common during HM activation).
+      if command -v swaymsg >/dev/null 2>&1; then
+        uid="$(id -u)"
+        sway_sock="${SWAYSOCK:-}"
+        if [ -z "$sway_sock" ]; then
+          sway_sock="$(ls -t "/run/user/$uid"/sway-ipc.*.sock 2>/dev/null | head -n 1 || true)"
+        fi
+
+        if [ -n "$sway_sock" ]; then
+          swaymsg -s "$sway_sock" reload || true
+        else
+          echo "No sway IPC socket found; skipping sway reload"
+        fi
+      fi
+
+      # Ensure an Emacs server exists, then reload init.
+      if command -v emacsclient >/dev/null 2>&1; then
+        if command -v systemctl >/dev/null 2>&1; then
+          systemctl --user start emacs.service >/dev/null 2>&1 || true
+        fi
+        emacsclient -a false -e "(load user-init-file)" || true
+      fi
+    } >>"$log_file" 2>&1
   '';
 
   # Fixing the XDG Directory Structure
