@@ -47,7 +47,7 @@
       export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$user/bin:$PATH"
 
       # Make systemctl --user usable during activation (no GUI env by default).
-      # NOTE: This is a *shell* parameter expansion; escape `${...}` so Nix
+      # NOTE: This is a *shell* parameter expansion; escape `''${...}` so Nix
       # doesn't try to treat it as Nix interpolation.
       export XDG_RUNTIME_DIR="''${XDG_RUNTIME_DIR:-/run/user/$uid}"
       if [ -z "''${DBUS_SESSION_BUS_ADDRESS:-}" ] && [ -S "$XDG_RUNTIME_DIR/bus" ]; then
