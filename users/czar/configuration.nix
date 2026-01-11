@@ -14,6 +14,11 @@
     stateVersion = "25.05";
     username = "czar";
     homeDirectory = "/home/czar";
+    sessionVariables = {
+      EDITOR = "emacsclient -t -a emacs";
+      VISUAL = "emacsclient -c -a emacs";
+      TERMINAL = "emacsclient -c -a emacs";
+    };
     packages = with pkgs; [
       git
       gnupg

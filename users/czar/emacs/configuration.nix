@@ -36,6 +36,11 @@
       ;; Basic dark theme
       (load-theme 'wombat t)
 
+      ;; Enable emacsclient
+      (require 'server)
+      (unless (server-running-p)
+        (server-start))
+
       ;; Indent with spaces, default to 4
       (setq-default indent-tabs-mode nil)
       (setq-default tab-width 4)
@@ -118,6 +123,23 @@
 
       (use-package flycheck
         :hook ((after-init-hook . global-flycheck-mode)))
+
+      ;; Claude Code (CLI) integration
+      (require 'subr-x)
+      (require 'project)
+
+      (defun czar/claude-code ()
+        "Run `claude-code` in an `ansi-term` buffer, rooted at the current project if any."
+        (interactive)
+        (let* ((exe (or (executable-find "claude-code")
+                        (user-error "claude-code not found in PATH")))
+               (default-directory
+                 (or (when-let ((proj (project-current nil)))
+                       (project-root proj))
+                     default-directory)))
+          (ansi-term exe "claude-code")))
+
+      (global-set-key (kbd "C-c c") #'czar/claude-code)
     '';
   };
 

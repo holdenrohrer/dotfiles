@@ -43,7 +43,10 @@ in
       };
       pull.rebase = false;
       init.defaultBranch = "main";
-      core.autocrlf = false;
+      core = {
+        autocrlf = false;
+        editor = "emacsclient -t -a emacs";
+      };
     };
     signing = {
       key = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
