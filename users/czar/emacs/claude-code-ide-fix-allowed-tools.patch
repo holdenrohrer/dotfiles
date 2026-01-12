@@ -1,0 +1,18 @@
+diff --git a/claude-code-ide.el b/claude-code-ide.el
+index 0000000..1111111 100644
+--- a/claude-code-ide.el
++++ b/claude-code-ide.el
+@@ -759,8 +759,14 @@
+           (let ((allowed-tools
+                  (cond
+                   ;; Auto mode: get all emacs-tools names
+                   ((eq claude-code-ide-mcp-allowed-tools 'auto)
+-                   (mapconcat 'identity (claude-code-ide-mcp-server-get-tool-names "mcp__emacs-tools__") " "))
++                   (let ((ide-tools '("openFile" "getCurrentSelection" "getOpenEditors"
++                                      "getWorkspaceFolders" "getDiagnostics" "saveDocument"
++                                      "close_tab" "openDiff" "closeAllDiffTabs" "checkDocumentDirty"))
++                         (emacs-tools (claude-code-ide-mcp-server-get-tool-names "mcp__emacs-tools__")))
++                     (mapconcat 'identity (append ide-tools emacs-tools) " ")))
+                   ;; List of specific tools
+                   ((listp claude-code-ide-mcp-allowed-tools)
+                    (mapconcat 'identity claude-code-ide-mcp-allowed-tools " "))

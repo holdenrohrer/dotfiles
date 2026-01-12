@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "claude-code-ide": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767376959,
+        "narHash": "sha256-Abs8+r5bQSkRJC74TEq1RRZtvj4TYmL1Vijq6KO9GG4=",
+        "owner": "manzaltu",
+        "repo": "claude-code-ide.el",
+        "rev": "760240d7f03ff16f90ede9d4f4243cd94f3fed73",
+        "type": "github"
+      },
+      "original": {
+        "owner": "manzaltu",
+        "repo": "claude-code-ide.el",
+        "type": "github"
+      }
+    },
     "gptel-magit-src": {
       "flake": false,
       "locked": {
@@ -70,23 +86,6 @@
         "type": "github"
       }
     },
-    "macher-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1760560577,
-        "narHash": "sha256-YirxcHzR4JqAgriZ6f97ysoo6pEeHjz0FZml4qAgAco=",
-        "ref": "refs/heads/main",
-        "rev": "9d83af3faabdb486ddb5bde2e564ab586d3fc1d8",
-        "revCount": 29,
-        "type": "git",
-        "url": "file:///home/czar/projects/macher"
-      },
-      "original": {
-        "rev": "9d83af3faabdb486ddb5bde2e564ab586d3fc1d8",
-        "type": "git",
-        "url": "file:///home/czar/projects/macher"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1764522689,
@@ -105,11 +104,11 @@
     },
     "root": {
       "inputs": {
+        "claude-code-ide": "claude-code-ide",
         "gptel-magit-src": "gptel-magit-src",
         "gptel-src": "gptel-src",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
-        "macher-src": "macher-src",
         "nixpkgs": "nixpkgs"
       }
     }

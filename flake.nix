@@ -18,13 +18,13 @@
       flake = false;
     };
 
-    macher-src = {
-      url = "git+file:///home/czar/projects/macher?rev=9d83af3faabdb486ddb5bde2e564ab586d3fc1d8";
+    gptel-magit-src = {
+      url = "github:ragnard/gptel-magit/main";
       flake = false;
     };
 
-    gptel-magit-src = {
-      url = "github:ragnard/gptel-magit/main";
+    claude-code-ide = {
+      url = "github:manzaltu/claude-code-ide.el";
       flake = false;
     };
   };
@@ -35,8 +35,8 @@
     nixpkgs,
     home-manager,
     gptel-src,
-    macher-src,
     gptel-magit-src,
+    claude-code-ide,
     ...
   } @ inputs: let
     inherit (self) outputs;

@@ -14,6 +14,7 @@
   # Emacs configuration
   programs.emacs = {
     enable = true;
+    package = pkgs.emacs-pgtk;
 
     extraPackages = epkgs: with epkgs; [
       evil
@@ -33,6 +34,19 @@
       flycheck
       git-timemachine
       eat
+      (melpaBuild {
+        pname = "claude-code-ide";
+        version = "0.0.1";
+        src = pkgs.applyPatches {
+          name = "claude-code-ide-patched";
+          src = inputs.claude-code-ide;
+          patches = [ ./claude-code-ide-fix-allowed-tools.patch ];
+        };
+        recipe = pkgs.writeText "recipe" ''
+          (claude-code-ide :repo "manzaltu/claude-code-ide.el" :fetcher github)
+        '';
+        packageRequires = [ transient websocket web-server ];
+      })
     ];
 
     extraConfig = ''
@@ -50,8 +64,11 @@
       ;; Match foot's alpha=0.7 (70% opaque background).
       ;; (Wayland-friendly in recent Emacs via alpha-background.)
       (add-to-list 'default-frame-alist '(alpha-background . 70))
-      (when (display-graphic-p)
-        (set-frame-parameter nil 'alpha-background 70))
+      (defun czar/apply-frame-transparency (frame)
+      (when (display-graphic-p frame)
+          (set-frame-parameter frame 'alpha-background 70)))
+
+      (add-hook 'after-make-frame-functions #'czar/apply-frame-transparency)
 
       ;; Enable emacsclient
       (require 'server)
@@ -141,22 +158,33 @@
       (use-package flycheck
         :hook ((after-init-hook . global-flycheck-mode)))
 
-      (use-package eat)
+      (use-package eat
+        :config
+        (define-key eat-char-mode-map (kbd "C-y") #'eat-yank)
+        (define-key eat-line-mode-map (kbd "C-y") #'eat-yank))
 
       (defun czar/eat-new ()
         "Open a new Eat shell instead of reusing the current terminal buffer."
         (interactive)
         ;; Eat supports creating a new terminal when invoked with a prefix arg.
-        (let ((current-prefix-arg '(4)))
-          (call-interactively #'eat)))
+        (eat nil t))
 
       (use-package claude-code-ide
-        :vc (:url "https://github.com/manzaltu/claude-code-ide.el" :rev :newest)
         :bind ("C-c C-'" . claude-code-ide-menu)
         :custom
-        (claude-code-ide-terminal-backend "eat")
+        (claude-code-ide-terminal-backend 'eat)
+        (claude-code-ide-debug t)
+        (claude-code-ide-cli-debug t)
+        (claude-code-ide-mcp-allowed-tools 'auto)
         :config
-        (claude-code-ide-emacs-tools-setup))  ; enables MCP tools
+        (claude-code-ide-emacs-tools-setup)
+        (defun czar/claude-code-hide-nobreak-space (buffer &rest _)
+          "Hide non-breaking space glyph in Claude Code terminal BUFFER."
+          (with-current-buffer (car buffer)
+            (setq-local nobreak-char-display nil))
+          buffer)
+        (advice-add 'claude-code-ide--create-terminal-session
+                    :filter-return #'czar/claude-code-hide-nobreak-space))
     '';
   };
 

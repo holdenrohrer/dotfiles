@@ -39,8 +39,7 @@
         ".local/share/lutris"
         ".local/share/direnv/allow"
         ".cache/nix-index"
-        ".config/claude"
-        ".config/claude-code"
+        ".claude"
       ];
     };
   };
