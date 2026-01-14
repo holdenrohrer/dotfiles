@@ -1,0 +1,244 @@
+;; Avoid (require) and stick to (use-package)
+
+;; Basic dark theme
+(load-theme 'wombat t)
+
+;; Gentler UI: remove chrome (scroll bars, menu/tool bars, tab bar).
+(when (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(when (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(when (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(when (fboundp 'tab-bar-mode) (tab-bar-mode -1))
+
+;; Match foot's alpha=0.7 (70% opaque background).
+;; (Wayland-friendly in recent Emacs via alpha-background.)
+(add-to-list 'default-frame-alist '(alpha-background . 70))
+(defun czar/apply-frame-transparency (frame)
+(when (display-graphic-p frame)
+    (set-frame-parameter frame 'alpha-background 70)))
+
+(add-hook 'after-make-frame-functions #'czar/apply-frame-transparency)
+
+;; Default directory should be project root when in a project
+(defun my-set-default-directory-to-project-root ()
+  "Set default-directory to project root if in a project."
+  (when-let ((project (project-current))
+             (root (project-root project)))
+    (setq-local default-directory root)))
+
+(add-hook 'find-file-hook #'my-set-default-directory-to-project-root)
+
+;; Enable emacsclient
+(require 'server)
+(unless (server-running-p)
+  (server-start))
+
+;; Indent with spaces, default to 4
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(setq indent-line-function 'indent-relative)
+
+(add-hook 'before-save-hook 'whitespace-cleanup)
+
+; Fold text at word boundaries
+; And use the visual-fill-column package to
+(use-package visual-fill-column
+  :config
+  (setq-default fill-column 100)
+  (global-visual-fill-column-mode 1)
+  (global-visual-line-mode 1))
+
+;; Language modes
+(use-package nix-mode
+  :mode "\\.nix\\'")
+(use-package meson-mode
+  :mode "meson.build")
+
+;; undo-tree
+(use-package undo-tree
+  :init
+  (unless (file-directory-p "~/drafts/undotrees")
+    (make-directory "~/drafts/undotrees" t))
+  (setq undo-tree-history-directory-alist '(("." . "~/drafts/undotrees"))
+        undo-tree-auto-save-history t)
+  :config
+  (global-undo-tree-mode 1)
+  ;:hook
+  ;((fundamental-mode . undo-tree-mode)
+  ; (prog-mode . undo-tree-mode)
+  ; (text-mode . undo-tree-mode))
+  :custom
+  (evil-undo-system 'undo-tree))
+
+
+(use-package dtrt-indent
+  :config
+  (dtrt-indent-mode 1)
+  (add-hook 'dtrt-indent-adapt-hook
+    (lambda ()
+      (setq-local evil-shift-width dtrt-indent-original-indent))))
+
+(setq auto-save-file-name-transforms
+  '((".*" "~/drafts/emacs/\\1" t)))
+(setq backup-directory-alist '(("." . "~/drafts/emacs/backups")))
+(setq lock-file-name-transforms '(("\\`/.*/\\([^/]+\\)\\'" "~/drafts/emacs/locks/\\1" t)))
+
+(use-package envrc
+  :hook (after-init . envrc-global-mode))
+
+;; Evil mode
+(use-package evil
+  :config
+  (evil-mode 1)
+  :custom
+  (evil-want-keybinding nil))
+
+(use-package evil-collection
+  :after (evil magit)
+  :config
+  (evil-collection-init))
+
+;; Keep Ediff control panel in the current frame, at the bottom, small
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+
+(add-hook 'after-change-major-mode-hook
+        (lambda ()
+            (when (eq major-mode 'fundamental-mode)
+            (run-hooks 'fundamental-mode-hook))))
+
+(use-package flycheck
+  :hook ((after-init-hook . global-flycheck-mode)))
+
+(use-package eat
+  :config
+  (defun czar/eat-kill-buffer-and-window (process)
+    "Kill eat buffer and close window/frame when PROCESS exits."
+    ;; explicit check to ensure we don't act on a deleted buffer
+    (when-let* ((buf (process-buffer process))
+                ((buffer-live-p buf))
+                ;; Pass t to find the window in any frame
+                (win (get-buffer-window buf t)))
+      (with-selected-window win
+        ;; quit-window with KILL=t kills the buffer.
+        ;; If quit-restore is set correctly, this will also delete the frame.
+        (quit-window t win))))
+
+  (add-hook 'eat-exit-hook #'czar/eat-kill-buffer-and-window))
+
+(defun czar/eat-new ()
+  "Open a new Eat terminal in a dedicated frame."
+  (interactive)
+  ;; 1. Create the frame first
+  (let ((frame (selected-frame)))
+    ;; 2. Select the frame immediately so `eat` sees a valid window/geometry
+    (select-frame frame)
+    (eat nil t)
+    ;; 3. Start eat. This switches the new window to the *eat* buffer.
+    ;; Note: If you prefer your specific arguments, use (eat nil t) but
+    ;; ensure you switch to the buffer manually if it doesn't happen auto.
+    ;; 4. Set the quit-restore parameter on the selected window.
+    ;; Structure: (METHOD OBUFFER OWINDOW THIS-BUFFER)
+    ;; We use `list` to ensure `(current-buffer)` is evaluated to the actual object.
+    (let ((win (selected-window)))
+      (set-window-prev-buffers win nil)
+      (set-window-parameter win 'quit-restore
+                            (list 'frame 'frame nil (window-buffer win))))))
+
+;; ========================================================================
+;; Git Worktrees - Default to ~/drafts/emacs/
+;; ========================================================================
+;; Consistent with auto-save (line 119) and undo-tree (line 99) locations
+
+(use-package magit
+  :config
+  ;; Ensure ~/drafts/emacs/ directory exists
+  (unless (file-directory-p "~/drafts/emacs/worktrees")
+    (make-directory "~/drafts/emacs/worktrees/" t))
+
+  ;; Default offsite worktree location
+  (defun czar/magit-worktree-read-directory-offsite (prompt branch)
+    "Read worktree directory with ~/drafts/emacs/worktrees/ as default.
+PROMPT is displayed to user. BRANCH is the branch name for the new worktree."
+    (let* ((repo-name (file-name-nondirectory
+                       (directory-file-name (magit-toplevel))))
+           (branch-name (if branch
+                            (replace-regexp-in-string "/" "-" branch)
+                          "new"))
+           (default-dir (expand-file-name
+                         (concat "~/drafts/emacs/worktrees/" repo-name "-" branch-name))))
+      (read-directory-name prompt default-dir default-dir)))
+
+  (setq magit-read-worktree-directory-function #'czar/magit-worktree-read-directory-offsite)
+
+  ;; Show worktrees in magit-status buffer
+  (require 'magit-worktree)
+  (magit-add-section-hook 'magit-status-sections-hook
+                          'magit-insert-worktrees
+                          'magit-insert-stashes
+                          'append))
+
+(use-package claude-code-ide
+  :bind ("C-c C-'" . claude-code-ide-menu)
+  :custom
+  (claude-code-ide-terminal-backend 'eat)
+  (claude-code-ide-mcp-allowed-tools 'auto)
+  :config
+  (defun czar/claude-code-hide-nobreak-space (buffer &rest _)
+    "Hide non-breaking space glyph in Claude Code terminal BUFFER."
+    (with-current-buffer (car buffer)
+      (setq-local nobreak-char-display nil))
+    buffer)
+  (advice-add 'claude-code-ide--create-terminal-session
+              :filter-return #'czar/claude-code-hide-nobreak-space)
+
+  ;; Fix: ediff opens in wrong frame
+  ;; When Claude Code triggers openDiff, switch to the frame where
+  ;; Claude Code is running before opening the diff.
+  (defun czar/claude-code-switch-to-claude-frame (session)
+    "Switch to the frame containing the Claude Code buffer for SESSION."
+    (when-let* ((project-dir (claude-code-ide-mcp-session-project-dir session))
+                (claude-buffer-name (claude-code-ide--get-buffer-name project-dir))
+                (claude-buffer (get-buffer claude-buffer-name)))
+      (let ((target-frame
+             (catch 'found
+               (dolist (frame (frame-list))
+                 (dolist (window (window-list frame))
+                   (when (eq (window-buffer window) claude-buffer)
+                     (throw 'found frame))))
+               ;; Fallback: find frame with project files
+               (dolist (frame (frame-list))
+                 (dolist (window (window-list frame))
+                   (when-let ((buf (window-buffer window))
+                              (file (buffer-file-name buf)))
+                     (when (string-prefix-p (expand-file-name project-dir)
+                                            (expand-file-name file))
+                       (throw 'found frame)))))
+               nil)))
+        (when target-frame
+          (select-frame-set-input-focus target-frame)
+          target-frame))))
+
+  (defun czar/claude-code-open-diff-frame-aware (orig-fun arguments)
+    "Advice to switch to Claude frame before opening diff."
+    (let* ((old-file-path (alist-get 'old_file_path arguments))
+           (session (or (claude-code-ide-mcp--find-session-for-file old-file-path)
+                        (claude-code-ide-mcp--get-current-session))))
+      (when session
+        (czar/claude-code-switch-to-claude-frame session))
+      (funcall orig-fun arguments)))
+
+  (advice-add 'claude-code-ide-mcp-handle-open-diff
+              :around #'czar/claude-code-open-diff-frame-aware))
+
+;; Perspective - workspace management
+(use-package perspective
+  :bind (("C-x C-b" . persp-list-buffers)
+         ("C-x b" . persp-switch-to-buffer*)
+         ("C-x k" . persp-kill-buffer*))
+  :custom
+  (persp-mode-prefix-key (kbd "C-c M-p"))
+  :init
+  (persp-mode))
+
+  ;; Aggressively indent everything
+  (use-package aggressive-indent
+    :config (global-aggressive-indent-mode 1))

@@ -41,6 +41,9 @@
         ".cache/nix-index"
         ".claude"
       ];
+      files = [
+        "claude.json"
+      ];
     };
   };
 
