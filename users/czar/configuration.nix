@@ -25,7 +25,7 @@
       imagemagickBig
       nmap
       just
-      claude-code
+      inputs.claude-code.packages.${pkgs.system}.default
       texliveFull
     ];
   };

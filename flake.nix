@@ -27,6 +27,9 @@
       url = "github:manzaltu/claude-code-ide.el";
       flake = false;
     };
+
+    claude-code.url = "github:sadjow/claude-code-nix";
+    claude-code.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
@@ -37,6 +40,7 @@
     gptel-src,
     gptel-magit-src,
     claude-code-ide,
+    claude-code,
     ...
   } @ inputs: let
     inherit (self) outputs;
