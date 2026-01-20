@@ -17,9 +17,10 @@
     directories = [
       "/etc/wireguard"
       "/var/lib/nixos"
+      "/var/lib/iwd"  # iwd state (known networks added imperatively)
+      "/etc/NetworkManager/system-connections"  # NetworkManager connections added imperatively
     ];
     files = [
-      "/etc/wpa_supplicant.conf"
       "/etc/machine-id"
     ];
     users.czar = {
@@ -42,7 +43,7 @@
         ".claude"
       ];
       files = [
-        "claude.json"
+        ".claude.json"
       ];
     };
   };
@@ -95,6 +96,9 @@
     enable = true;
     enable32Bit = true;
   };
+
+  # Emacs overlay for native compilation (faster startup & execution)
+  nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
   # Such that lutris is permitted to use steam subsystems
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
@@ -169,7 +173,7 @@
   users.users.czar = {
     isNormalUser = true;
     hashedPassword = "$y$j9T$wj9.X4U8QhhiWWDAb0TJ30$ikq5fEV1mIkY3yqyqeU7dHmcH3akxufVu/Dv7gixbF/";
-    extraGroups = [ "wheel" "video" "docker" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "video" "docker" "networkmanager" ]; # Enable 'sudo' for the user.
     packages = with pkgs; [
       tree
     ];

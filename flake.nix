@@ -30,6 +30,10 @@
 
     claude-code.url = "github:sadjow/claude-code-nix";
     claude-code.inputs.nixpkgs.follows = "nixpkgs";
+
+    # Emacs overlay for native compilation
+    emacs-overlay.url = "github:nix-community/emacs-overlay";
+    emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = {
@@ -41,6 +45,7 @@
     gptel-magit-src,
     claude-code-ide,
     claude-code,
+    emacs-overlay,
     ...
   } @ inputs: let
     inherit (self) outputs;
