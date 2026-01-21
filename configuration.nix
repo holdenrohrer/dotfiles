@@ -16,6 +16,7 @@
     hideMounts = true;
     directories = [
       "/etc/wireguard"
+      "/etc/tailscale-auth"
       "/var/lib/nixos"
       "/var/lib/iwd"  # iwd state (known networks added imperatively)
       "/etc/NetworkManager/system-connections"  # NetworkManager connections added imperatively
@@ -53,6 +54,11 @@
     powerKey = "hibernate";
     lidSwitch = "hybrid-sleep";
     lidSwitchExternalPower = "hybrid-sleep";
+  };
+
+  services.tailscale = {
+    enable = true;
+    authKeyFile = "/etc/tailscale-auth";
   };
 
   services.smokeping = {
@@ -173,7 +179,7 @@
   users.users.czar = {
     isNormalUser = true;
     hashedPassword = "$y$j9T$wj9.X4U8QhhiWWDAb0TJ30$ikq5fEV1mIkY3yqyqeU7dHmcH3akxufVu/Dv7gixbF/";
-    extraGroups = [ "wheel" "video" "docker" "networkmanager" ]; # Enable 'sudo' for the user.
+    extraGroups = [ "wheel" "video" "docker" "networkmanager" "wireshark" ]; # Enable 'sudo' for the user.
     packages = with pkgs; [
       tree
     ];
@@ -189,6 +195,11 @@
   programs.sway = {
     enable = true;
     wrapperFeatures.gtk = true;
+  };
+
+  programs.wireshark = {
+    enable = true;
+    package = pkgs.wireshark;  # GUI version (use wireshark-cli for terminal only)
   };
 
   xdg.portal.wlr.enable = true;
