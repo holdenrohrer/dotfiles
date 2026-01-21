@@ -16,7 +16,6 @@
     hideMounts = true;
     directories = [
       "/etc/wireguard"
-      "/etc/tailscale-auth"
       "/var/lib/nixos"
       "/var/lib/iwd"  # iwd state (known networks added imperatively)
       "/etc/NetworkManager/system-connections"  # NetworkManager connections added imperatively
@@ -54,11 +53,6 @@
     powerKey = "hibernate";
     lidSwitch = "hybrid-sleep";
     lidSwitchExternalPower = "hybrid-sleep";
-  };
-
-  services.tailscale = {
-    enable = true;
-    authKeyFile = "/etc/tailscale-auth";
   };
 
   services.smokeping = {
