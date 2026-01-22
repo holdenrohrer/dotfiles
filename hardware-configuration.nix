@@ -112,6 +112,14 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
+  # Intel VA-API hardware video acceleration (for Moonlight, etc.)
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver  # VAAPI driver for Broadwell+ Intel GPUs
+    ];
+  };
+
   hardware.printers = {
     ensurePrinters = [
       {
