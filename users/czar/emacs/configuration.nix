@@ -9,7 +9,11 @@
   ];
 
   # Keep an Emacs server running so emacsclient always has a socket.
-  services.emacs.enable = true;
+  # Start after graphical session so it inherits WAYLAND_DISPLAY etc.
+  services.emacs = {
+    enable = true;
+    startWithUserSession = "graphical";
+  };
 
   # Emacs configuration
   programs.emacs = {
