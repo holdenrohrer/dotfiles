@@ -25,7 +25,7 @@
       imagemagickBig
       nmap
       just
-      inputs.claude-code.packages.${pkgs.system}.default
+      inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
       socat # necessary for claude-code sandbox
       bubblewrap # necessary for claude-code sandbox
       nodejs # for claude-code MCP server

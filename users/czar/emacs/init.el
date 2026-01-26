@@ -242,3 +242,13 @@ PROMPT is displayed to user. BRANCH is the branch name for the new worktree."
   ;; Aggressively indent everything
   (use-package aggressive-indent
     :config (global-aggressive-indent-mode 1))
+
+;; ein: skip /login when server has no auth
+;; jupyter_server 2.0+ removes the /login endpoint when no token is set,
+;; causing ein:login to fail with 404. Convert nil (unknown auth) to ""
+;; (no auth) so ein skips login and goes straight to the notebook list.
+(with-eval-after-load 'ein-notebooklist
+  (defun czar/ein-no-auth-fallback (result)
+    (or result ""))
+  (advice-add 'ein:notebooklist-token-or-password
+              :filter-return #'czar/ein-no-auth-fallback))

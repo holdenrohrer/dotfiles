@@ -41,6 +41,7 @@
       eat
       aggressive-indent
       perspective
+      ein
       (melpaBuild {
         pname = "claude-code-ide";
         version = "0.0.1";
