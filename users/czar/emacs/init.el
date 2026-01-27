@@ -143,6 +143,8 @@
       (set-window-parameter win 'quit-restore
                             (list 'frame 'frame nil (window-buffer win))))))
 
+(global-set-key (kbd "C-c t") #'czar/eat-new)
+
 ;; ========================================================================
 ;; Git Worktrees - Default to ~/drafts/emacs/
 ;; ========================================================================
