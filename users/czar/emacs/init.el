@@ -148,11 +148,15 @@
   (interactive)
   (unless (derived-mode-p 'eat-mode)
     (user-error "Not in an Eat terminal"))
-  (remove-hook 'eat-exit-hook #'czar/eat-kill-buffer-and-window)
-  (unwind-protect
-      (kill-buffer (current-buffer))
-    (add-hook 'eat-exit-hook #'czar/eat-kill-buffer-and-window))
-  (eat nil t))
+  (let ((dir default-directory))
+    (remove-hook 'eat-exit-hook #'czar/eat-kill-buffer-and-window)
+    (when-let ((proc (get-buffer-process (current-buffer))))
+      (set-process-query-on-exit-flag proc nil))
+    (unwind-protect
+        (kill-buffer (current-buffer))
+      (add-hook 'eat-exit-hook #'czar/eat-kill-buffer-and-window))
+    (let ((default-directory dir))
+      (eat nil t))))
 
 (global-set-key (kbd "C-c t") #'czar/eat-new)
 (global-set-key (kbd "C-c u") #'czar/eat-restart)
