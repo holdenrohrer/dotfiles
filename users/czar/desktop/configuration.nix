@@ -74,6 +74,7 @@ in
     anki
     prismlauncher
     lutris
+    signal-desktop
     wl-clipboard
     adwaita-icon-theme
   ];
