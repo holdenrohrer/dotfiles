@@ -134,13 +134,27 @@
     useXkbConfig = true; # use xkb.options in tty.
   };
 
+  # Xwayland support
   services.xserver.enable = true;
 
-  # Enable the GNOME Desktop Environment.
-  services.displayManager.defaultSession = "sway";
-  services.displayManager.autoLogin = {
+  # Use uwsm to properly manage Wayland session lifecycle
+  # (environment import to systemd, graphical-session.target, clean shutdown)
+  programs.uwsm = {
     enable = true;
-    user = "czar";
+    waylandCompositors.sway = {
+      binPath = "${pkgs.sway}/bin/sway";
+      prettyName = "Sway";
+    };
+  };
+
+  # Use greetd - LightDM creates a fake graphical-session.target that
+  # prevents uwsm from managing the session properly
+  services.greetd = {
+    enable = true;
+    settings.default_session = {
+      command = "${pkgs.uwsm}/bin/uwsm start -- ${pkgs.sway}/bin/sway";
+      user = "czar";
+    };
   };
 
 

@@ -116,6 +116,7 @@ in
       "--replace" "@XKB_LAYOUT@" "${sharedConfig.keyboard.layout}"
       "--replace" "@XKB_VARIANT@" "${sharedConfig.keyboard.variant}"
       "--replace" "@XKB_OPTIONS@" "${sharedConfig.keyboard.options}"
+      "--replace" "@uwsm@" "${pkgs.lib.getExe pkgs.uwsm}"
     ];
   };
 }
