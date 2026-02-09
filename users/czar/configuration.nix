@@ -15,8 +15,8 @@
     username = "czar";
     homeDirectory = "/home/czar";
     sessionVariables = {
-      EDITOR = "emacsclient -a emacs";
-      VISUAL = "emacsclient -a emacs";
+      EDITOR = "emacsclient -r -a emacs";
+      VISUAL = "emacsclient -r -a emacs";
       TERMINAL = "emacsclient -c -a emacs";
     };
     packages = with pkgs; [
