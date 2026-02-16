@@ -4,8 +4,8 @@
     enable = true;
 
     shellAliases = {
-      vim = "$VISUAL";
-      vi = "$VISUAL";
+      vim = "emacsclient -r -a emacs";
+      vi = "emacsclient -r -a emacs";
     };
 
     oh-my-zsh = {
