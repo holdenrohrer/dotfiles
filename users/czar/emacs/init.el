@@ -53,6 +53,19 @@
 (use-package meson-mode
   :mode "meson.build")
 
+;; Tree-sitter modes for TypeScript/TSX
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+
+;; Eglot (built-in LSP client)
+(use-package eglot
+  :hook (prog-mode . eglot-ensure)
+  :config
+  ;; Use ormolu for Haskell formatting
+  (setq-default eglot-workspace-configuration
+                '(:haskell (:formattingProvider "ormolu")))
+  (setq eglot-autoshutdown t))
+
 ;; undo-tree
 (use-package undo-tree
   :init
@@ -91,6 +104,23 @@
   (evil-mode 1)
   :custom
   (evil-want-keybinding nil))
+
+;; Fix Evil's o/O to use RET, which modes handle more reliably than
+;; indent-according-to-mode. See: github.com/haskell/haskell-mode/issues/1265
+(defun czar/evil-open-below (count)
+  "Simulate evil's o using 'A RET'."
+  (interactive "p")
+  (setq unread-command-events (listify-key-sequence (kbd "RET")))
+  (evil-append-line count))
+
+(defun czar/evil-open-above (count)
+  "Simulate evil's O using 'UP A RET'. Doesn't work on first line."
+  (interactive "p")
+  (forward-line -1)
+  (czar/evil-open-below count))
+
+(define-key evil-normal-state-map "o" #'czar/evil-open-below)
+(define-key evil-normal-state-map "O" #'czar/evil-open-above)
 
 (use-package evil-collection
   :after (evil magit)
@@ -246,7 +276,24 @@ PROMPT is displayed to user. BRANCH is the branch name for the new worktree."
       (funcall orig-fun arguments)))
 
   (advice-add 'claude-code-ide-mcp-handle-open-diff
-              :around #'czar/claude-code-open-diff-frame-aware))
+              :around #'czar/claude-code-open-diff-frame-aware)
+
+  ;; Fix: Claude Code doesn't detect window resizes from WM/Emacs frame changes
+  (defun czar/claude-code-handle-window-resize (frame)
+    "Handle window size changes for Claude Code buffers in FRAME."
+    (dolist (window (window-list frame))
+      (let ((buffer (window-buffer window)))
+        (when (and buffer
+                   (buffer-live-p buffer)
+                   (string-prefix-p "*claude-code[" (buffer-name buffer)))
+          (with-current-buffer buffer
+            (when-let ((proc (get-buffer-process buffer)))
+              (let ((height (window-body-height window))
+                    (width (window-body-width window)))
+                (set-window-parameter window 'claude-code-ide-cached-width width)
+                (set-process-window-size proc height width))))))))
+
+  (add-hook 'window-size-change-functions #'czar/claude-code-handle-window-resize))
 
 ;; Perspective - workspace management
 (use-package perspective

@@ -34,8 +34,6 @@
       nix-mode
       undo-tree
       meson-mode
-      lsp-mode
-      lsp-ui
       flycheck
       git-timemachine
       eat
@@ -56,9 +54,22 @@
     extraConfig = builtins.readFile ./init.el;
   };
 
-  # Core CLI tools
+  # Core CLI tools and language servers
   home.packages = with pkgs; [
     direnv
+    # Language servers for eglot
+    pyright
+    nodePackages.typescript-language-server
+    nodePackages.typescript
   ];
+
+  # Tree-sitter grammars - symlink to Emacs default search path
+  home.file.".emacs.d/tree-sitter".source =
+    "${pkgs.emacsPackages.treesit-grammars.with-grammars (g: [
+      g.tree-sitter-typescript
+      g.tree-sitter-tsx
+      g.tree-sitter-javascript
+      g.tree-sitter-json
+    ])}/lib";
 
 }
