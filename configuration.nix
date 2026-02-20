@@ -10,6 +10,7 @@
       ./hardware-configuration.nix
       ./wireless.nix
       ./low-bat.nix
+      ./backup.nix
     ];
 
   environment.persistence."/persist" = {
@@ -20,6 +21,7 @@
       "/var/lib/iwd"  # iwd state (known networks added imperatively)
       "/etc/NetworkManager/system-connections"  # NetworkManager connections added imperatively
       "/var/lib/docker"
+      "/etc/borg"   # SSH key + passphrase for borgbackup
     ];
     files = [
       "/etc/machine-id"
