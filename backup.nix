@@ -7,6 +7,8 @@
     paths = [ "/persist" ];
     exclude = [
       "/persist/home/*/.cache"
+      "/persist/home/*/.mozilla/firefox/*/storage/default/*/cache"
+      "/persist/home/*/.mozilla/firefox/*/favicons.sqlite*"
     ];
     repo = "ssh://de4841@de4841.rsync.net/./borg";
     encryption = {
