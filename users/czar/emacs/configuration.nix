@@ -61,6 +61,8 @@
     pyright
     nodePackages.typescript-language-server
     nodePackages.typescript
+    nixd
+    nodePackages.bash-language-server
   ];
 
   # Tree-sitter grammars - symlink to Emacs default search path

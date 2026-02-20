@@ -61,6 +61,7 @@
 (use-package eglot
   :hook (prog-mode . eglot-ensure)
   :config
+  (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
   ;; Use ormolu for Haskell formatting
   (setq-default eglot-workspace-configuration
                 '(:haskell (:formattingProvider "ormolu")))
@@ -114,10 +115,16 @@
   (evil-append-line count))
 
 (defun czar/evil-open-above (count)
-  "Simulate evil's O using 'UP A RET'. Doesn't work on first line."
+  "Simulate evil's O by going up one line then doing o."
   (interactive "p")
-  (forward-line -1)
-  (czar/evil-open-below count))
+  (if (= (line-number-at-pos) 1)
+      (progn
+        (beginning-of-line)
+        (open-line count)
+        (evil-insert-state 1))
+    (forward-line -1)
+    (setq unread-command-events (listify-key-sequence (kbd "RET")))
+    (evil-append-line count)))
 
 (define-key evil-normal-state-map "o" #'czar/evil-open-below)
 (define-key evil-normal-state-map "O" #'czar/evil-open-above)
@@ -135,8 +142,12 @@
             (when (eq major-mode 'fundamental-mode)
             (run-hooks 'fundamental-mode-hook))))
 
+
 (use-package flycheck
-  :hook ((after-init-hook . global-flycheck-mode)))
+  :hook ((after-init-hook . global-flycheck-mode))
+  :config
+  (add-hook 'eglot-managed-mode-hook
+            (lambda () (when (eglot-managed-p) (flycheck-mode -1)))))
 
 (use-package eat
   :config
