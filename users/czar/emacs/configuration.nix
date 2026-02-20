@@ -5,6 +5,7 @@
     ./sudoedit.nix
     ./gptel.nix
     ./haskell.nix
+    ./ocaml.nix
     ./lean.nix
   ];
 
