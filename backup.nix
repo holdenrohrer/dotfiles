@@ -3,6 +3,10 @@
   # Borg package available system-wide (for manual operations like `borg list`, `borg mount`)
   environment.systemPackages = [ pkgs.borgbackup ];
 
+  programs.ssh.knownHosts."de4841.rsync.net" = {
+    publicKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIObQN4P/deJ/k4P4kXh6a9K4Q89qdyywYetp9h3nwfPo";
+  };
+
   services.borgbackup.jobs.persist = {
     paths = [ "/persist" ];
     exclude = [
