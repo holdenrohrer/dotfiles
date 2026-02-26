@@ -40,7 +40,10 @@ let
     CFG="$(${pkgs.coreutils}/bin/mktemp -p "''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}")"
     trap "${pkgs.coreutils}/bin/rm -f '$CFG'" EXIT
     PASSWORD="$(${pkgs.pass}/bin/pass hrhr.dev/hr | head -n1)"
+    CACHE_DIR="''${XDG_CACHE_HOME:-$HOME/.cache}/imap-readonly-mcp"
+    ${pkgs.coreutils}/bin/mkdir -p "$CACHE_DIR"
     ${pkgs.coreutils}/bin/cat > "$CFG" <<EOF
+    cache_path: $CACHE_DIR/email_cache.sqlite
     account:
       protocol: imap
       host: hrhr.dev
