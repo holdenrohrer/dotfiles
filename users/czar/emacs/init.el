@@ -242,6 +242,7 @@ PROMPT is displayed to user. BRANCH is the branch name for the new worktree."
   (claude-code-ide-mcp-allowed-tools 'auto)
   (claude-code-ide-cli-extra-flags "--dangerously-skip-permissions")
   :config
+  (claude-code-ide-emacs-tools-setup)
   (defun czar/claude-code-hide-nobreak-space (buffer &rest _)
     "Hide non-breaking space glyph in Claude Code terminal BUFFER."
     (with-current-buffer (car buffer)
