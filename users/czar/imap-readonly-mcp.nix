@@ -37,9 +37,10 @@ let
 
   imap-readonly-mcp-wrapper = pkgs.writeShellScriptBin "imap-readonly-mcp-wrapper" ''
     set -euo pipefail
+    CFG="$(${pkgs.coreutils}/bin/mktemp -p "''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}")"
+    trap "${pkgs.coreutils}/bin/rm -f '$CFG'" EXIT
     PASSWORD="$(${pkgs.pass}/bin/pass hrhr.dev/hr | head -n1)"
-    exec ${imap-readonly-mcp}/bin/imap-readonly-mcp \
-      --config <(${pkgs.coreutils}/bin/cat <<EOF
+    ${pkgs.coreutils}/bin/cat > "$CFG" <<EOF
     account:
       protocol: imap
       host: hrhr.dev
@@ -47,26 +48,56 @@ let
       username: hr
       password: "$PASSWORD"
     EOF
-    ) "$@"
+    ${pkgs.coreutils}/bin/chmod 600 "$CFG"
+    ${imap-readonly-mcp}/bin/imap-readonly-mcp --config "$CFG" "$@"
   '';
 
 in
 {
-  home.packages = [ imap-readonly-mcp-wrapper ];
+  programs.emacs.extraConfig = ''
+    (with-eval-after-load 'claude-code-ide
+      (defvar claude-code-ide-on-demand-mcp-servers
+        '(("imap-readonly"
+           . ((type . "stdio")
+              (command . "${imap-readonly-mcp-wrapper}/bin/imap-readonly-mcp-wrapper")
+              (args . [])))))
 
-  home.activation.registerClaudeMcpServers = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    set +e
-    CLAUDE="${inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/claude"
-    if [ -x "$CLAUDE" ]; then
-      "$CLAUDE" mcp add-json --scope user imap-readonly \
-        '${builtins.toJSON {
-          type = "stdio";
-          command = "${imap-readonly-mcp-wrapper}/bin/imap-readonly-mcp-wrapper";
-          args = [];
-          env = {};
-        }}' 2>/dev/null || true
+      (defvar claude-code-ide-on-demand-mcp-enabled nil)
 
-      "$CLAUDE" mcp remove openrouter 2>/dev/null || true
-    fi
+      (defun claude-code-ide--on-demand-mcp-advice (orig-fn &rest args)
+        (let ((cmd (apply orig-fn args)))
+          (dolist (name claude-code-ide-on-demand-mcp-enabled)
+            (when-let ((config (alist-get name claude-code-ide-on-demand-mcp-servers
+                                          nil nil #'string=)))
+              (let* ((wrapper (list (cons 'mcpServers
+                                         (list (cons (intern name) config)))))
+                     (json-str (json-encode wrapper)))
+                (setq cmd (concat cmd " --mcp-config "
+                                  (shell-quote-argument json-str))))))
+          cmd))
+
+      (advice-add 'claude-code-ide--build-claude-command
+                  :around #'claude-code-ide--on-demand-mcp-advice)
+
+      (transient-define-suffix claude-code-ide-select-mcp-servers ()
+        "Select on-demand MCP servers to enable."
+        :description (lambda ()
+                       (format "MCP servers [%s]"
+                               (if claude-code-ide-on-demand-mcp-enabled
+                                   (string-join claude-code-ide-on-demand-mcp-enabled ", ")
+                                 "none")))
+        (interactive)
+        (setq claude-code-ide-on-demand-mcp-enabled
+              (completing-read-multiple
+               "Enable MCP servers: "
+               (mapcar #'car claude-code-ide-on-demand-mcp-servers)
+               nil t))
+        (message "MCP servers: %s"
+                 (if claude-code-ide-on-demand-mcp-enabled
+                     (string-join claude-code-ide-on-demand-mcp-enabled ", ")
+                   "none")))
+
+      (transient-append-suffix 'claude-code-ide-menu "d"
+        '("m" claude-code-ide-select-mcp-servers)))
   '';
 }

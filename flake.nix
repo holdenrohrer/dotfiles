@@ -31,6 +31,12 @@
     claude-code.url = "github:sadjow/claude-code-nix";
     claude-code.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Read-only IMAP MCP server for Claude Code
+    imap-readonly-mcp-src = {
+      url = "github:AzizMarashly/imap-readonly-mcp";
+      flake = false;
+    };
+
     # Emacs overlay for native compilation
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
@@ -45,6 +51,7 @@
     gptel-magit-src,
     claude-code-ide,
     claude-code,
+    imap-readonly-mcp-src,
     emacs-overlay,
     ...
   } @ inputs: let

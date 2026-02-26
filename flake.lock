@@ -152,6 +152,22 @@
         "type": "github"
       }
     },
+    "imap-readonly-mcp-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1764266866,
+        "narHash": "sha256-qP8AjtF0mIrw3w36sB9CvBX/JQbOvFukJu5s4VHVyS8=",
+        "owner": "AzizMarashly",
+        "repo": "imap-readonly-mcp",
+        "rev": "c69bf598e81fda089331ddfb3805449465e89602",
+        "type": "github"
+      },
+      "original": {
+        "owner": "AzizMarashly",
+        "repo": "imap-readonly-mcp",
+        "type": "github"
+      }
+    },
     "impermanence": {
       "inputs": {
         "home-manager": "home-manager_2",
@@ -227,6 +243,7 @@
         "gptel-magit-src": "gptel-magit-src",
         "gptel-src": "gptel-src",
         "home-manager": "home-manager",
+        "imap-readonly-mcp-src": "imap-readonly-mcp-src",
         "impermanence": "impermanence",
         "nixpkgs": "nixpkgs_2"
       }

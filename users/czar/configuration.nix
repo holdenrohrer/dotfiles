@@ -4,6 +4,7 @@
     ./emacs/configuration.nix
     ./desktop/configuration.nix
     ./zsh.nix
+    ./imap-readonly-mcp.nix
   ];
 
   home = {
@@ -29,12 +30,6 @@
       socat # necessary for claude-code sandbox
       bubblewrap # necessary for claude-code sandbox
       nodejs # for claude-code MCP server
-      (pkgs.writeShellScriptBin "openrouter-mcp-wrapper" ''
-        export OPENROUTER_API_KEY="$(${pkgs.pass}/bin/pass openrouter |
-    ${pkgs.gawk}/bin/awk '/apikey:/ {print $2}')"
-        exec ${pkgs.nodejs}/bin/npx openrouter-mcp start "$@"
-      '')
-
       texliveFull
     ];
   };
