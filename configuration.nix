@@ -44,6 +44,7 @@
         ".local/share/direnv/allow"
         ".cache/nix-index"
         ".claude"
+        ".config/gh"
       ];
       files = [
         ".claude.json"
