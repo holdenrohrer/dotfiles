@@ -41,7 +41,7 @@
     );
 
     # On-demand MCP server framework for Emacs
-    programs.emacs.extraConfig = ''
+    programs.emacs.extraConfig = lib.mkBefore ''
       (with-eval-after-load 'claude-code-ide
         (defvar claude-code-ide-on-demand-mcp-servers '())
         (defvar claude-code-ide-on-demand-mcp-enabled nil)
