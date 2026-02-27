@@ -21,6 +21,7 @@
       "/var/lib/iwd"  # iwd state (known networks added imperatively)
       "/etc/NetworkManager/system-connections"  # NetworkManager connections added imperatively
       "/var/lib/docker"
+      "/var/lib/tailscale"
       "/etc/borg"   # SSH key + passphrase for borgbackup
     ];
     files = [
