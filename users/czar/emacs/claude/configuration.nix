@@ -61,13 +61,8 @@
         (advice-add 'claude-code-ide--build-claude-command
                     :around #'claude-code-ide--on-demand-mcp-advice)
 
-        (transient-define-suffix claude-code-ide-select-mcp-servers ()
+        (defun claude-code-ide-select-mcp-servers ()
           "Select on-demand MCP servers to enable."
-          :description (lambda ()
-                         (format "MCP servers [%s]"
-                                 (if claude-code-ide-on-demand-mcp-enabled
-                                     (string-join claude-code-ide-on-demand-mcp-enabled ", ")
-                                   "none")))
           (interactive)
           (setq claude-code-ide-on-demand-mcp-enabled
                 (completing-read-multiple
@@ -78,6 +73,15 @@
                    (if claude-code-ide-on-demand-mcp-enabled
                        (string-join claude-code-ide-on-demand-mcp-enabled ", ")
                      "none")))
+
+        (put 'claude-code-ide-select-mcp-servers 'transient--suffix
+             (transient-suffix
+              :command 'claude-code-ide-select-mcp-servers
+              :description (lambda ()
+                             (format "MCP servers [%s]"
+                                     (if claude-code-ide-on-demand-mcp-enabled
+                                         (string-join claude-code-ide-on-demand-mcp-enabled ", ")
+                                       "none")))))
 
         (transient-append-suffix 'claude-code-ide-menu "d"
           '("m" claude-code-ide-select-mcp-servers)))
