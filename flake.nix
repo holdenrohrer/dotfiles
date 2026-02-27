@@ -37,6 +37,18 @@
       flake = false;
     };
 
+    # Claude Code plugins (ralph-loop scripts)
+    claude-plugins-public = {
+      url = "github:anthropics/claude-plugins-public";
+      flake = false;
+    };
+
+    # Playwright MCP server
+    playwright-mcp-src = {
+      url = "github:microsoft/playwright-mcp";
+      flake = false;
+    };
+
     # Emacs overlay for native compilation
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
@@ -52,6 +64,8 @@
     claude-code-ide,
     claude-code,
     imap-readonly-mcp-src,
+    claude-plugins-public,
+    playwright-mcp-src,
     emacs-overlay,
     ...
   } @ inputs: let

@@ -2,9 +2,9 @@
 {
   imports = [
     ./emacs/configuration.nix
+    ./emacs/claude/configuration.nix
     ./desktop/configuration.nix
     ./zsh.nix
-    ./imap-readonly-mcp.nix
   ];
 
   home = {
@@ -68,12 +68,6 @@
     music = "";
     pictures = "";
     videos = "";
-  };
-
-  home.file.".claude/CLAUDE.md" = {
-    text = ''
-      After modifying code, use getDiagnostics to check for type errors, syntax errors, and other LSP diagnostics before finishing.
-    '';
   };
 
   home.file.".profile" = {

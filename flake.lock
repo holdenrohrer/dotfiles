@@ -37,6 +37,22 @@
         "type": "github"
       }
     },
+    "claude-plugins-public": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1771993700,
+        "narHash": "sha256-pcMIh9sgdMDs0dlc0POomxnPOLoP5/EOdCGMKoESmoc=",
+        "owner": "anthropics",
+        "repo": "claude-plugins-public",
+        "rev": "55b58ec6e5649104f926ba7558b567dc8d33c5ff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "anthropics",
+        "repo": "claude-plugins-public",
+        "type": "github"
+      }
+    },
     "emacs-overlay": {
       "inputs": {
         "nixpkgs": [
@@ -235,17 +251,35 @@
         "type": "github"
       }
     },
+    "playwright-mcp-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772046643,
+        "narHash": "sha256-AOpcyIFC811izcnrVxsrhniyggWvQH6cUQ4dMCrw2NE=",
+        "owner": "microsoft",
+        "repo": "playwright-mcp",
+        "rev": "43e31e83619c23c07bcfab31cfba24b4c437251b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "microsoft",
+        "repo": "playwright-mcp",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "claude-code": "claude-code",
         "claude-code-ide": "claude-code-ide",
+        "claude-plugins-public": "claude-plugins-public",
         "emacs-overlay": "emacs-overlay",
         "gptel-magit-src": "gptel-magit-src",
         "gptel-src": "gptel-src",
         "home-manager": "home-manager",
         "imap-readonly-mcp-src": "imap-readonly-mcp-src",
         "impermanence": "impermanence",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "playwright-mcp-src": "playwright-mcp-src"
       }
     },
     "systems": {
