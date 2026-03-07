@@ -19,6 +19,7 @@
       mode = "repokey-blake2";
       passCommand = "cat /persist/etc/borg/passphrase";
     };
+    failOnWarnings = false;
     compression = "auto,zstd";
     startAt = "hourly";
     prune.keep = {
@@ -46,6 +47,14 @@
 
       # Only act on connectivity-change if we actually have full connectivity
       if [ "$2" = "connectivity-change" ] && [ "$CONNECTIVITY_STATE" != "FULL" ]; then
+        exit 0
+      fi
+
+      # Always retry if the last run failed
+      result=$(systemctl show borgbackup-job-persist.service \
+        --property=Result --value)
+      if [ "$result" != "success" ]; then
+        systemctl start borgbackup-job-persist.service
         exit 0
       fi
 
