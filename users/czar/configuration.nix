@@ -31,6 +31,7 @@
       bubblewrap # necessary for claude-code sandbox
       nodejs # for claude-code MCP server
       texliveFull
+      gh
     ];
   };
 
