@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 {
   imports = [
@@ -6,7 +6,7 @@
     ./playwright.nix
     ./claude-md.nix
     ./imap-readonly-mcp.nix
-    ./dbus.nix
+    inputs.claude-code-dbus.homeManagerModules.default
   ];
 
   # Composable Claude Code settings -- modules contribute via these options
