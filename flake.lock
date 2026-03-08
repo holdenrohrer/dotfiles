@@ -28,11 +28,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773007182,
-        "narHash": "sha256-r5mGcJB/jOmnhN7Hv+2prIThUEAAw1sBxHqsUS9eod4=",
+        "lastModified": 1773007440,
+        "narHash": "sha256-Ph1fFM4uAyhiK16u7LXq3u1ub+mjntDB2H7J0MY8wSA=",
         "owner": "holdenrohrer",
         "repo": "claude-code-dbus",
-        "rev": "d393910bbb056d0b1087f585ebd1aa56da93a280",
+        "rev": "e6dca9d50f35964ee39d2d84ff5f633629febce5",
         "type": "github"
       },
       "original": {
