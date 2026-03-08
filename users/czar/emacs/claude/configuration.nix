@@ -6,6 +6,7 @@
     ./playwright.nix
     ./claude-md.nix
     ./imap-readonly-mcp.nix
+    ./dbus.nix
   ];
 
   # Composable Claude Code settings -- modules contribute via these options
@@ -33,6 +34,7 @@
     };
 
     # Serialize settings + hooks into settings.json
+    home.file.".claude/settings.json".force = true;
     home.file.".claude/settings.json".text = builtins.toJSON (
       config.claude.settings
       // lib.optionalAttrs (config.claude.hooks != {}) {

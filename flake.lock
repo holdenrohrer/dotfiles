@@ -21,6 +21,26 @@
         "type": "github"
       }
     },
+    "claude-code-dbus": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1773000757,
+        "narHash": "sha256-w3h7JvxZTY+0ngiZ/NMbv+i/x3qSVbmZxbeMYtUymL4=",
+        "owner": "holdenrohrer",
+        "repo": "claude-code-dbus",
+        "rev": "c3c9583513f479fc1daf48500e27118f77609a97",
+        "type": "github"
+      },
+      "original": {
+        "owner": "holdenrohrer",
+        "repo": "claude-code-dbus",
+        "type": "github"
+      }
+    },
     "claude-code-ide": {
       "flake": false,
       "locked": {
@@ -270,6 +290,7 @@
     "root": {
       "inputs": {
         "claude-code": "claude-code",
+        "claude-code-dbus": "claude-code-dbus",
         "claude-code-ide": "claude-code-ide",
         "claude-plugins-public": "claude-plugins-public",
         "emacs-overlay": "emacs-overlay",

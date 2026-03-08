@@ -49,6 +49,10 @@
       flake = false;
     };
 
+    # D-Bus bridge for Claude Code lifecycle events
+    claude-code-dbus.url = "github:holdenrohrer/claude-code-dbus";
+    claude-code-dbus.inputs.nixpkgs.follows = "nixpkgs";
+
     # Emacs overlay for native compilation
     emacs-overlay.url = "github:nix-community/emacs-overlay";
     emacs-overlay.inputs.nixpkgs.follows = "nixpkgs";
@@ -66,6 +70,7 @@
     imap-readonly-mcp-src,
     claude-plugins-public,
     playwright-mcp-src,
+    claude-code-dbus,
     emacs-overlay,
     ...
   } @ inputs: let
