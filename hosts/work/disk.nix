@@ -40,11 +40,11 @@
               subvolumes = {
                 "@/root"      = { mountpoint = "/"; };
                 "@/nix"       = { mountpoint = "/nix"; };
-                "@/persist"   = { mountpoint = "/persist"; neededForBoot = true; };
+                "@/persist"   = { mountpoint = "/persist"; };
                 "@/var-lib"   = { mountpoint = "/var/lib"; };
                 "@/var-cache" = { mountpoint = "/var/cache"; };
-                "@/var-log"   = { mountpoint = "/var/log"; neededForBoot = true; };
-                "@/var-tmp"   = { mountpoint = "/var/tmp"; neededForBoot = true; };
+                "@/var-log"   = { mountpoint = "/var/log"; };
+                "@/var-tmp"   = { mountpoint = "/var/tmp"; };
               };
             };
           };

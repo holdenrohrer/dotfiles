@@ -12,6 +12,10 @@
     # Impermanence for persistent storage
     impermanence.url = "github:nix-community/impermanence";
 
+    # Declarative disk partitioning
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
+
     # Emacs packages from GitHub
     gptel-src = {
       url = "github:karthink/gptel/master";
@@ -62,6 +66,7 @@
     self,
     impermanence,
     nixpkgs,
+    disko,
     home-manager,
     gptel-src,
     gptel-magit-src,
@@ -119,7 +124,7 @@
       };
 
       work = mkHost {
-        hostModules = [ ./hosts/work ];
+        hostModules = [ ./hosts/work inputs.disko.nixosModules.disko ];
         hostConfig = {
           hostname = "work";
           git = {
