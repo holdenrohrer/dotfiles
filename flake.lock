@@ -28,11 +28,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773004117,
-        "narHash": "sha256-w3ZWLMjwn9nfQJzbIHqBWWtSxNcV8IGbGayPEA5tAwk=",
+        "lastModified": 1773007182,
+        "narHash": "sha256-r5mGcJB/jOmnhN7Hv+2prIThUEAAw1sBxHqsUS9eod4=",
         "owner": "holdenrohrer",
         "repo": "claude-code-dbus",
-        "rev": "c6545a3deb6fb75259594a09660b717d63b8db88",
+        "rev": "d393910bbb056d0b1087f585ebd1aa56da93a280",
         "type": "github"
       },
       "original": {
@@ -70,6 +70,26 @@
       "original": {
         "owner": "anthropics",
         "repo": "claude-plugins-public",
+        "type": "github"
+      }
+    },
+    "disko": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1772867152,
+        "narHash": "sha256-RIFgZ4O6Eg+5ysZ8Tqb3YvcqiRaNy440GEY22ltjRrs=",
+        "owner": "nix-community",
+        "repo": "disko",
+        "rev": "eaafb89b56e948661d618eefd4757d9ea8d77514",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "disko",
         "type": "github"
       }
     },
@@ -293,6 +313,7 @@
         "claude-code-dbus": "claude-code-dbus",
         "claude-code-ide": "claude-code-ide",
         "claude-plugins-public": "claude-plugins-public",
+        "disko": "disko",
         "emacs-overlay": "emacs-overlay",
         "gptel-magit-src": "gptel-magit-src",
         "gptel-src": "gptel-src",
