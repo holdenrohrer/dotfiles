@@ -17,8 +17,6 @@ let
   };
 
 in {
-  networking.hostName = "nixos";
-
   # Disable old stack
   networking.wireless.enable = false;
   networking.dhcpcd.enable = false;

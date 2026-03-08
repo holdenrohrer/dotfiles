@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, outputs, sharedConfig, ... }:
+{ config, pkgs, inputs, outputs, sharedConfig, hostConfig, ... }:
 
 let
   screenshot = pkgs.writeScriptBin "screenshot" ''
@@ -39,14 +39,14 @@ in
     settings = {
       user = {
         name = "Holden Rohrer";
-        email = "hr@hrhr.dev";
+        email = hostConfig.git.email;
       };
       pull.rebase = false;
       init.defaultBranch = "main";
       core.autocrlf = false;
     };
     signing = {
-      key = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
+      key = hostConfig.git.signingKey;
       signByDefault = true;
     };
   };
@@ -66,11 +66,8 @@ in
   # Packages useful in the graphical (Wayland/Sway) environment
   home.packages = with pkgs; [
     screenshot
-    hyperrogue
     feh
     anki
-    prismlauncher
-    lutris
     signal-desktop
     wl-clipboard
     adwaita-icon-theme

@@ -72,7 +72,7 @@
     inherit (self) outputs;
     system = "x86_64-linux";
 
-    # Shared configuration values that need to be passed to home-manager
+    # Shared configuration values passed to both NixOS and home-manager
     sharedConfig = {
       keyboard = {
         layout = "us,us";
@@ -80,24 +80,48 @@
         options = "caps:escape,lv3:ralt_switch_multikey,grp:lalt_lshift_toggle";
       };
     };
+
+    # Helper to build a host configuration
+    mkHost = { hostModules, hostConfig, extraHmImports ? [] }: nixpkgs.lib.nixosSystem {
+      inherit system;
+      specialArgs = { inherit inputs outputs sharedConfig hostConfig; };
+      modules = hostModules ++ [
+        ./configuration.nix
+        impermanence.nixosModules.impermanence
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.extraSpecialArgs = { inherit inputs outputs sharedConfig hostConfig; };
+          home-manager.users.czar = {
+            imports = [ ./users/czar/configuration.nix ] ++ extraHmImports;
+          };
+        }
+      ];
+    };
   in {
     nixosConfigurations = {
-      nixos = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit inputs outputs sharedConfig; };
-        modules = [
-          ./configuration.nix
-          impermanence.nixosModules.impermanence
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit inputs outputs sharedConfig; };
+      personal = mkHost {
+        hostModules = [ ./hosts/personal ];
+        extraHmImports = [ ./users/czar/desktop/games.nix ];
+        hostConfig = {
+          hostname = "personal";
+          git = {
+            email = "hr@hrhr.dev";
+            signingKey = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
+          };
+        };
+      };
 
-            # Base configurations
-            home-manager.users.czar = import ./users/czar/configuration.nix;
-          }
-        ];
+      work = mkHost {
+        hostModules = [ ./hosts/work ];
+        hostConfig = {
+          hostname = "work";
+          git = {
+            email = "WORK_EMAIL_HERE";
+            signingKey = "WORK_GPG_KEY_HERE";
+          };
+        };
       };
     };
   };
