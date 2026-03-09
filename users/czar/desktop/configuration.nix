@@ -19,7 +19,62 @@ in
   ];
 
   # GUI/desktop programs managed at the user level
-  programs.firefox.enable = true;
+  programs.firefox = {
+    enable = true;
+    profiles.default = {
+      id = 0;
+      isDefault = true;
+
+      search = {
+        default = "Kagi";
+        force = true;
+        engines = {
+          "Kagi" = {
+            urls = [{ template = "https://kagi.com/search?q={searchTerms}"; }];
+            definedAliases = [ "@k" "@kagi" ];
+          };
+          "google".metaData.hidden = true;
+          "bing".metaData.hidden = true;
+          "amazondotcom".metaData.hidden = true;
+          "ddg".metaData.hidden = true;
+          "ebay".metaData.hidden = true;
+          "wikipedia".metaData.hidden = true;
+        };
+      };
+
+      settings = {
+        # Startup: restore previous session
+        "browser.startup.page" = 3;
+
+        # Privacy
+        "privacy.donottrackheader.enabled" = true;
+        "network.dns.disablePrefetch" = true;
+        "network.http.speculative-parallel-limit" = 0;
+        "network.prefetch-next" = false;
+        "privacy.userContext.enabled" = true;
+        "privacy.userContext.ui.enabled" = true;
+        "signon.rememberSignons" = false;
+        "privacy.clearOnShutdown_v2.formdata" = true;
+
+        # UI
+        "browser.ctrlTab.sortByRecentlyUsed" = true;
+        "browser.fullscreen.autohide" = false;
+        "browser.newtabpage.enabled" = false;
+        "browser.newtabpage.activity-stream.feeds.section.topstories" = false;
+        "browser.newtabpage.activity-stream.showSponsoredTopSites" = false;
+
+        # Misc
+        "layout.spellcheckDefault" = 0;
+        "intl.regional_prefs.use_os_locales" = true;
+        "browser.translations.neverTranslateLanguages" = "fr";
+        "browser.ml.chat.provider" = "https://claude.ai/new";
+
+        # Downloads: auto-delete from private browsing
+        "browser.download.deletePrivate" = true;
+        "browser.download.deletePrivate.chosen" = true;
+      };
+    };
+  };
 
   programs.foot = {
     enable = true;
