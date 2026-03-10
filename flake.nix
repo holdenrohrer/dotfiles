@@ -128,8 +128,8 @@
         hostConfig = {
           hostname = "work";
           git = {
-            email = "WORK_EMAIL_HERE";
-            signingKey = "WORK_GPG_KEY_HERE";
+            email = "hr@hrhr.dev";
+            signingKey = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
           };
         };
       };
