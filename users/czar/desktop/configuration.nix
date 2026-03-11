@@ -32,12 +32,12 @@ let
 
   openUrl = pkgs.writeShellApplication {
     name = "open-url";
-    runtimeInputs = [ pkgs.coreutils pkgs.sway ];
+    runtimeInputs = [ pkgs.coreutils pkgs.findutils pkgs.sway ];
     text = ''
       url="$1"
       [ -z "$url" ] && exit 1
       export SWAYSOCK
-      SWAYSOCK=$(ls /run/user/1000/sway-ipc.*.sock 2>/dev/null | head -1) || true
+      SWAYSOCK=$(find /run/user/1000 -maxdepth 1 -name 'sway-ipc.*.sock' -print -quit 2>/dev/null) || true
       [ -z "$SWAYSOCK" ] && exit 1
       exec swaymsg exec "firefox '$url'"
     '';
@@ -342,21 +342,20 @@ in
 
   programs.git = {
     enable = true;
+    signing = {
+      key = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
+      signByDefault = true;
+    };
     settings = {
       user = {
         name = "Holden Rohrer";
-        email = hostConfig.git.email;
+        email = "hr@hrhr.dev";
       };
       pull.rebase = false;
       init.defaultBranch = "main";
       core.autocrlf = false;
     };
-  } // (if hostConfig.git.signingKey != null then {
-    signing = {
-      key = hostConfig.git.signingKey;
-      signByDefault = true;
-    };
-  } else {});
+  };
 
   # GnuPG and gpg-agent with Wayland pinentry (wayprompt)
   programs.gpg.enable = true;
