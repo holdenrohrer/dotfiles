@@ -26,6 +26,8 @@ let
     fi
   '';
 
+  head = "${pkgs.lib.getExe' pkgs.coreutils "head"}";
+  sort = "${pkgs.lib.getExe' pkgs.coreutils "sort"}";
   swaymsg = "${pkgs.lib.getExe' pkgs.sway "swaymsg"}";
   xrandr = "${pkgs.xorg.xrandr}/bin/xrandr";
   xdotool = "${pkgs.xdotool}/bin/xdotool";
@@ -52,17 +54,17 @@ let
         rest="''${geom#*+}"; x="''${rest%%+*}"
         sorted+=("$x $rdp")
       done
-      IFS=$'\n' sorted=($(printf '%s\n' "''${sorted[@]}" | sort -n)); unset IFS
+      IFS=$'\n' sorted=($(printf '%s\n' "''${sorted[@]}" | ${sort} -n)); unset IFS
 
       # 3. Enumerate X11 windows (sorted ascending by wid = X11-1, X11-2, ...)
       wids=()
-      root_wid=$(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --maxdepth 0 --name "" 2>/dev/null | head -1)
+      root_wid=$(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --maxdepth 0 --name "" 2>/dev/null | ${head} -1)
       while IFS= read -r wid; do
         [ "$wid" = "$root_wid" ] && continue
         geom=$(DISPLAY="$XRDP_XDISPLAY" ${xdotool} getwindowgeometry --shell "$wid" 2>/dev/null)
         eval "$geom"
         [ "''${WIDTH:-0}" -gt 100 ] && wids+=("$wid")
-      done < <(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --name "" 2>/dev/null | sort -n)
+      done < <(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --name "" 2>/dev/null | ${sort} -n)
 
       # 4. Assign X11-1..N to sorted rdp outputs, configure sway + X11 windows
       i=1
@@ -84,9 +86,14 @@ let
         i=$((i + 1))
       done
 
-      # 5. Disable unused X11 outputs
+      # 5. Disable unused X11 outputs and hide their X11 windows
       while [ "$i" -le "''${WLR_X11_OUTPUTS:-6}" ]; do
         ${swaymsg} output "X11-$i" disable 2>/dev/null || true
+        wid_idx=$((i - 1))
+        if [ "$wid_idx" -lt "''${#wids[@]}" ]; then
+          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowsize "''${wids[$wid_idx]}" 1 1
+          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowmove "''${wids[$wid_idx]}" 0 0
+        fi
         i=$((i + 1))
       done
     }
