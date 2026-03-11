@@ -128,8 +128,8 @@
         hostConfig = {
           hostname = "work";
           git = {
-            email = "hr@hrhr.dev";
-            signingKey = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
+            email = "hrohrer@hellosyncx.com";
+            signingKey = null;
           };
         };
       };

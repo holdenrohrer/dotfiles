@@ -67,6 +67,7 @@ in
         --replace-fail "h264_frame_interval=16" "h264_frame_interval=8" \
         --replace-fail "rfx_frame_interval=32" "rfx_frame_interval=8" \
         --replace-fail "normal_frame_interval=40" "normal_frame_interval=8"
+      sed -i '/^\[ChansrvLogging\]/,/^LogLevel=/{s/^LogLevel=.*/LogLevel=DEBUG/}' $out/sesman.ini
     '';
   };
 

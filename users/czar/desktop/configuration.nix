@@ -34,29 +34,25 @@ let
   xrdpMultimon = pkgs.writeShellScript "xrdp-multimon" ''
     [ -z "$XRDP_XDISPLAY" ] && exit 0
 
-    STATE_FILE="/tmp/.xrdp-multimon-map"
-
     configure() {
-      # 1. Parse xrandr: map rdp output names to their geometries
+      # 1. Parse xrandr: collect rdp outputs with geometries
       declare -A rdp_geom
       while IFS= read -r line; do
-        if [[ $line =~ ^(rdp[0-9]+)\ connected\ ([0-9]+x[0-9]+\+[0-9]+\+[0-9]+) ]]; then
-          rdp_geom["''${BASH_REMATCH[1]}"]="''${BASH_REMATCH[2]}"
+        if [[ $line =~ ^(rdp[0-9]+)\ connected\ (primary\ )?([0-9]+x[0-9]+\+[0-9]+\+[0-9]+) ]]; then
+          rdp_geom["''${BASH_REMATCH[1]}"]="''${BASH_REMATCH[3]}"
         fi
       done < <(DISPLAY="$XRDP_XDISPLAY" ${xrandr} --current)
 
       [ "''${#rdp_geom[@]}" -eq 0 ] && return
 
-      # 2. Read state file (X11-N=rdpN mappings from previous run)
-      declare -A map_x2r map_r2x
-      if [ -f "$STATE_FILE" ]; then
-        while IFS='=' read -r x11 rdp; do
-          [ -n "$x11" ] && [ -n "$rdp" ] && {
-            map_x2r["$x11"]="$rdp"
-            map_r2x["$rdp"]="$x11"
-          }
-        done < "$STATE_FILE"
-      fi
+      # 2. Sort rdp outputs left-to-right by X position
+      sorted=()
+      for rdp in "''${!rdp_geom[@]}"; do
+        geom="''${rdp_geom[$rdp]}"
+        rest="''${geom#*+}"; x="''${rest%%+*}"
+        sorted+=("$x $rdp")
+      done
+      IFS=$'\n' sorted=($(printf '%s\n' "''${sorted[@]}" | sort -n)); unset IFS
 
       # 3. Enumerate X11 windows (sorted ascending by wid = X11-1, X11-2, ...)
       wids=()
@@ -68,81 +64,30 @@ let
         [ "''${WIDTH:-0}" -gt 100 ] && wids+=("$wid")
       done < <(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --name "" 2>/dev/null | sort -n)
 
-      # 4. Reconcile mappings with current rdp outputs
-      declare -A used_x11
-      to_remove=()
+      # 4. Assign X11-1..N to sorted rdp outputs, configure sway + X11 windows
+      i=1
+      for entry in "''${sorted[@]}"; do
+        rdp="''${entry#* }"
+        geom="''${rdp_geom[$rdp]}"
+        w="''${geom%%x*}"; rest="''${geom#*x}"
+        h="''${rest%%+*}"; rest="''${rest#*+}"
+        x="''${rest%%+*}"; y="''${rest#*+}"
 
-      # 4a. Existing mappings: keep if rdp output still exists, mark for removal otherwise
-      for x11 in "''${!map_x2r[@]}"; do
-        rdp="''${map_x2r[$x11]}"
-        if [ -n "''${rdp_geom[$rdp]+_}" ]; then
-          geom="''${rdp_geom[$rdp]}"
-          w="''${geom%%x*}"; rest="''${geom#*x}"
-          h="''${rest%%+*}"; rest="''${rest#*+}"
-          x="''${rest%%+*}"; y="''${rest#*+}"
+        ${swaymsg} output "X11-$i" enable mode "''${w}x''${h}"
 
-          ${swaymsg} output "$x11" enable mode "''${w}x''${h}"
-
-          idx="''${x11#X11-}"
-          wid_idx=$((idx - 1))
-          if [ "$wid_idx" -ge 0 ] && [ "$wid_idx" -lt "''${#wids[@]}" ]; then
-            DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowsize "''${wids[$wid_idx]}" "$w" "$h"
-            DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowmove "''${wids[$wid_idx]}" "$x" "$y"
-          fi
-
-          used_x11["$x11"]=1
-        else
-          ${swaymsg} output "$x11" disable 2>/dev/null || true
-          to_remove+=("$x11")
+        wid_idx=$((i - 1))
+        if [ "$wid_idx" -lt "''${#wids[@]}" ]; then
+          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowsize "''${wids[$wid_idx]}" "$w" "$h"
+          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowmove "''${wids[$wid_idx]}" "$x" "$y"
         fi
+
+        i=$((i + 1))
       done
 
-      for x11 in "''${to_remove[@]}"; do
-        rdp="''${map_x2r[$x11]}"
-        unset "map_x2r[$x11]"
-        unset "map_r2x[$rdp]"
-      done
-
-      # 4b. New rdp outputs: assign lowest unused X11-N
-      for rdp in "''${!rdp_geom[@]}"; do
-        [ -n "''${map_r2x[$rdp]+_}" ] && continue
-
-        for i in $(seq 1 ''${WLR_X11_OUTPUTS:-6}); do
-          x11="X11-$i"
-          [ -n "''${used_x11[$x11]+_}" ] && continue
-
-          geom="''${rdp_geom[$rdp]}"
-          w="''${geom%%x*}"; rest="''${geom#*x}"
-          h="''${rest%%+*}"; rest="''${rest#*+}"
-          x="''${rest%%+*}"; y="''${rest#*+}"
-
-          ${swaymsg} output "$x11" enable mode "''${w}x''${h}"
-
-          wid_idx=$((i - 1))
-          if [ "$wid_idx" -ge 0 ] && [ "$wid_idx" -lt "''${#wids[@]}" ]; then
-            DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowsize "''${wids[$wid_idx]}" "$w" "$h"
-            DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowmove "''${wids[$wid_idx]}" "$x" "$y"
-          fi
-
-          map_x2r["$x11"]="$rdp"
-          map_r2x["$rdp"]="$x11"
-          used_x11["$x11"]=1
-          break
-        done
-      done
-
-      # Disable remaining unused X11 outputs
-      for i in $(seq 1 ''${WLR_X11_OUTPUTS:-6}); do
-        x11="X11-$i"
-        if [ -z "''${used_x11[$x11]+_}" ]; then
-          ${swaymsg} output "$x11" disable 2>/dev/null || true
-        fi
-      done
-
-      # 5. Write updated state file
-      : > "$STATE_FILE"
-      for x11 in "''${!map_x2r[@]}"; do
-        echo "$x11=''${map_x2r[$x11]}" >> "$STATE_FILE"
+      # 5. Disable unused X11 outputs
+      while [ "$i" -le "''${WLR_X11_OUTPUTS:-6}" ]; do
+        ${swaymsg} output "X11-$i" disable 2>/dev/null || true
+        i=$((i + 1))
       done
     }
 
@@ -262,11 +207,12 @@ in
       init.defaultBranch = "main";
       core.autocrlf = false;
     };
+  } // (if hostConfig.git.signingKey != null then {
     signing = {
       key = hostConfig.git.signingKey;
       signByDefault = true;
     };
-  };
+  } else {});
 
   # GnuPG and gpg-agent with Wayland pinentry (wayprompt)
   programs.gpg.enable = true;
@@ -304,6 +250,34 @@ in
     ];
   };
 
+  systemd.user.services.xrdp-multimon = {
+    Unit = {
+      Description = "xrdp multi-monitor layout manager";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "exec";
+      ExecStart = "${xrdpMultimon}";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  systemd.user.services.clipbridge-xrdp = {
+    Unit = {
+      Description = "Clipboard bridge between Wayland and xrdp X11";
+      PartOf = [ "graphical-session.target" ];
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "exec";
+      ExecStart = "${clipbridge}";
+      Restart = "on-failure";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
   xdg.configFile."sway/config".source = pkgs.substitute {
     name = "sway.config";
     src = ./sway.config;
@@ -328,8 +302,6 @@ in
       "--replace" "@XKB_VARIANT@" "${sharedConfig.keyboard.variant}"
       "--replace" "@XKB_OPTIONS@" "${sharedConfig.keyboard.options}"
       "--replace" "@uwsm@" "${pkgs.lib.getExe pkgs.uwsm}"
-      "--replace" "@clipbridge@" "${clipbridge}"
-      "--replace" "@xrdp-multimon@" "${xrdpMultimon}"
     ];
   };
 }
