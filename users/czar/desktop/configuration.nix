@@ -266,7 +266,8 @@ in
     Service = {
       Type = "exec";
       ExecStart = "${xrdpMultimon}";
-      Restart = "on-failure";
+      Restart = "always";
+      RestartSec = 2;
     };
     Install.WantedBy = [ "graphical-session.target" ];
   };
@@ -280,7 +281,8 @@ in
     Service = {
       Type = "exec";
       ExecStart = "${clipbridge}";
-      Restart = "on-failure";
+      Restart = "always";
+      RestartSec = 2;
     };
     Install.WantedBy = [ "graphical-session.target" ];
   };
@@ -309,6 +311,7 @@ in
       "--replace" "@XKB_VARIANT@" "${sharedConfig.keyboard.variant}"
       "--replace" "@XKB_OPTIONS@" "${sharedConfig.keyboard.options}"
       "--replace" "@uwsm@" "${pkgs.lib.getExe pkgs.uwsm}"
+      "--replace" "@SWAY_EXIT@" "${if hostConfig.hostname == "work" then "# sway exit disabled under xrdp (breaks session)" else "bindsym $mod+Shift+e exit"}"
     ];
   };
 }
