@@ -75,6 +75,7 @@ let
       pkgs.xorg.xrandr
       pkgs.xdotool
       pkgs.xorg.xev
+      pkgs.procps
     ];
     text = ''
       [ -z "''${XRDP_XDISPLAY:-}" ] && exit 0
@@ -173,15 +174,17 @@ let
         done
 
         # 7. Enumerate X11 windows (sorted ascending by wid = X11-1, X11-2, ...)
+        # Take the first MAX_OUTPUTS non-root windows by ascending XID.
+        # Sway's windows are created at session start so they always have the
+        # lowest XIDs; xrdp internals (0x800001+) sort after them.
         wids=()
         root_wid=$(DISPLAY="$XRDP_XDISPLAY" xdotool search --maxdepth 0 --name "" 2>/dev/null | head -1) || true
         while IFS= read -r wid; do
           [ "$wid" = "$root_wid" ] && continue
-          geom=$(DISPLAY="$XRDP_XDISPLAY" xdotool getwindowgeometry --shell "$wid" 2>/dev/null) || continue
-          eval "$geom" || true
-          [ "''${WIDTH:-0}" -gt 100 ] && wids+=("$wid")
+          wids+=("$wid")
+          [ "''${#wids[@]}" -ge "$MAX_OUTPUTS" ] && break
         done < <(DISPLAY="$XRDP_XDISPLAY" xdotool search --name "" 2>/dev/null | sort -n)
-        log "found ''${#wids[@]} X11 window(s) (width>100)"
+        log "found ''${#wids[@]} X11 window(s) (expected $MAX_OUTPUTS)"
 
         # 8. Disable all outputs and hide all X11 windows
         for j in $(seq 1 "$MAX_OUTPUTS"); do
@@ -225,6 +228,10 @@ let
 
           i=$((i + 1))
         done
+        # Force swaybg to restart so it only creates surfaces for active outputs
+        # (during sway reload, swaybg creates surfaces for all 6 default outputs)
+        pkill -x swaybg || true
+
         log "configuration complete"
       }
 
