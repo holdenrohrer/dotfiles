@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, outputs, sharedConfig, hostConfig, ... }:
+{ config, lib, pkgs, inputs, outputs, sharedConfig, hostConfig, ... }:
 
 let
   screenshot = pkgs.writeScriptBin "screenshot" ''
@@ -18,15 +18,18 @@ let
   wlPaste = "${pkgs.lib.getExe' pkgs.wl-clipboard "wl-paste"}";
 
   clipW2X = pkgs.writeShellScript "clip-w2x" ''
-    CONTENT=$(cat)
-    LAST=$(cat /tmp/.clipbridge-last 2>/dev/null) || true
+    CONTENT=$(${cat})
+    LAST=$(${cat} /tmp/.clipbridge-last 2>/dev/null) || true
     if [ -n "$CONTENT" ] && [ "$CONTENT" != "$LAST" ]; then
       printf '%s' "$CONTENT" > /tmp/.clipbridge-last
       printf '%s' "$CONTENT" | ${xclip} -selection clipboard -display "$1"
     fi
   '';
 
+  cat = "${pkgs.lib.getExe' pkgs.coreutils "cat"}";
   head = "${pkgs.lib.getExe' pkgs.coreutils "head"}";
+  seq = "${pkgs.lib.getExe' pkgs.coreutils "seq"}";
+  sleep = "${pkgs.lib.getExe' pkgs.coreutils "sleep"}";
   sort = "${pkgs.lib.getExe' pkgs.coreutils "sort"}";
   swaymsg = "${pkgs.lib.getExe' pkgs.sway "swaymsg"}";
   xrandr = "${pkgs.xorg.xrandr}/bin/xrandr";
@@ -35,6 +38,28 @@ let
 
   xrdpMultimon = pkgs.writeShellScript "xrdp-multimon" ''
     [ -z "$XRDP_XDISPLAY" ] && exit 0
+    MAX_OUTPUTS="''${WLR_X11_OUTPUTS:-6}"
+    STATE_FILE="/tmp/xrdp-multimon.state"
+
+    log() { echo "xrdp-multimon: $*"; }
+
+    wait_for_outputs() {
+      local attempts=0
+      while [ "$attempts" -lt 30 ]; do
+        local count
+        count=$(${swaymsg} -t get_outputs -r | ${pkgs.python3}/bin/python3 -c \
+          "import json,sys; print(len(json.loads(sys.stdin.read())))" 2>/dev/null) || count=0
+        if [ "$count" -ge "$MAX_OUTPUTS" ]; then
+          log "all $MAX_OUTPUTS sway outputs ready"
+          return 0
+        fi
+        log "waiting for outputs ($count/$MAX_OUTPUTS)..."
+        ${sleep} 0.5
+        attempts=$((attempts + 1))
+      done
+      log "ERROR: timed out waiting for outputs ($count/$MAX_OUTPUTS after 15s)"
+      return 1
+    }
 
     configure() {
       # 1. Parse xrandr: collect rdp outputs with geometries
@@ -45,18 +70,69 @@ let
         fi
       done < <(DISPLAY="$XRDP_XDISPLAY" ${xrandr} --current)
 
-      [ "''${#rdp_geom[@]}" -eq 0 ] && return
+      if [ "''${#rdp_geom[@]}" -eq 0 ]; then
+        log "WARNING: no rdp outputs found from xrandr"
+        return
+      fi
+      log "found ''${#rdp_geom[@]} rdp output(s)"
 
-      # 2. Sort rdp outputs left-to-right by X position
-      sorted=()
+      # 2. Load state db: rdp# -> workspace#
+      declare -A db
+      if [ -f "$STATE_FILE" ]; then
+        while IFS='=' read -r key val; do
+          [ -n "$key" ] && db["$key"]="$val"
+        done < "$STATE_FILE"
+        log "loaded state: $(declare -p db)"
+      fi
+
+      # 3. Build available workspace pool [1..10]
+      declare -A avail
+      for n in $(${seq} 1 10); do avail[$n]=1; done
+
+      # 4. Apply existing mappings for active rdp outputs, remove from pool
+      declare -A ws_map  # rdp# -> workspace# for this run
       for rdp in "''${!rdp_geom[@]}"; do
-        geom="''${rdp_geom[$rdp]}"
-        rest="''${geom#*+}"; x="''${rest%%+*}"
-        sorted+=("$x $rdp")
+        if [ -n "''${db[$rdp]:-}" ]; then
+          ws_map["$rdp"]="''${db[$rdp]}"
+          unset "avail[''${db[$rdp]}]"
+          log "sticky: $rdp -> workspace ''${db[$rdp]}"
+        fi
       done
-      IFS=$'\n' sorted=($(printf '%s\n' "''${sorted[@]}" | ${sort} -n)); unset IFS
 
-      # 3. Enumerate X11 windows (sorted ascending by wid = X11-1, X11-2, ...)
+      # 5. Assign new rdp outputs: sort by (x,y) offset, pick smallest available ws#
+      new_rdps=()
+      for rdp in "''${!rdp_geom[@]}"; do
+        [ -n "''${ws_map[$rdp]:-}" ] && continue
+        geom="''${rdp_geom[$rdp]}"
+        rest="''${geom#*+}"; x="''${rest%%+*}"; y="''${rest#*+}"
+        new_rdps+=("$(printf '%06d %06d %s' "$x" "$y" "$rdp")")
+      done
+      IFS=$'\n' new_rdps=($(printf '%s\n' "''${new_rdps[@]}" | ${sort})); unset IFS
+
+      for entry in "''${new_rdps[@]}"; do
+        rdp="''${entry##* }"
+        # find smallest available workspace
+        local smallest=""
+        for n in $(printf '%s\n' "''${!avail[@]}" | ${sort} -n); do
+          smallest="$n"; break
+        done
+        if [ -z "$smallest" ]; then
+          log "ERROR: no workspace available for $rdp"
+          continue
+        fi
+        ws_map["$rdp"]="$smallest"
+        db["$rdp"]="$smallest"
+        unset "avail[$smallest]"
+        log "new: $rdp -> workspace $smallest"
+      done
+
+      # 6. Save state
+      : > "$STATE_FILE"
+      for rdp in "''${!db[@]}"; do
+        echo "$rdp=''${db[$rdp]}" >> "$STATE_FILE"
+      done
+
+      # 7. Enumerate X11 windows (sorted ascending by wid = X11-1, X11-2, ...)
       wids=()
       root_wid=$(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --maxdepth 0 --name "" 2>/dev/null | ${head} -1)
       while IFS= read -r wid; do
@@ -65,17 +141,41 @@ let
         eval "$geom"
         [ "''${WIDTH:-0}" -gt 100 ] && wids+=("$wid")
       done < <(DISPLAY="$XRDP_XDISPLAY" ${xdotool} search --name "" 2>/dev/null | ${sort} -n)
+      log "found ''${#wids[@]} X11 window(s) (width>100)"
 
-      # 4. Assign X11-1..N to sorted rdp outputs, configure sway + X11 windows
+      # 8. Disable all outputs and hide all X11 windows
+      for j in $(${seq} 1 "$MAX_OUTPUTS"); do
+        ${swaymsg} output "X11-$j" disable || true
+        wid_idx=$((j - 1))
+        if [ "$wid_idx" -lt "''${#wids[@]}" ]; then
+          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowsize "''${wids[$wid_idx]}" 1 1
+          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowmove "''${wids[$wid_idx]}" 0 0
+        fi
+      done
+      log "all outputs disabled"
+
+      # 9. Enable outputs for active rdp monitors, bind workspaces
+      # Sort active rdps by assigned workspace# to assign X11-1,2,3... in ws order
+      sorted_active=()
+      for rdp in "''${!ws_map[@]}"; do
+        sorted_active+=("''${ws_map[$rdp]} $rdp")
+      done
+      IFS=$'\n' sorted_active=($(printf '%s\n' "''${sorted_active[@]}" | ${sort} -n)); unset IFS
+
       i=1
-      for entry in "''${sorted[@]}"; do
+      for entry in "''${sorted_active[@]}"; do
+        ws="''${entry%% *}"
         rdp="''${entry#* }"
         geom="''${rdp_geom[$rdp]}"
         w="''${geom%%x*}"; rest="''${geom#*x}"
         h="''${rest%%+*}"; rest="''${rest#*+}"
         x="''${rest%%+*}"; y="''${rest#*+}"
 
-        ${swaymsg} output "X11-$i" enable mode "''${w}x''${h}"
+        log "enable X11-$i (''${w}x''${h}) for $rdp, workspace $ws"
+        if ! ${swaymsg} output "X11-$i" enable mode "''${w}x''${h}"; then
+          log "ERROR: failed to enable X11-$i"
+        fi
+        ${swaymsg} workspace "$ws" output "X11-$i"
 
         wid_idx=$((i - 1))
         if [ "$wid_idx" -lt "''${#wids[@]}" ]; then
@@ -85,25 +185,17 @@ let
 
         i=$((i + 1))
       done
-
-      # 5. Disable unused X11 outputs and hide their X11 windows
-      while [ "$i" -le "''${WLR_X11_OUTPUTS:-6}" ]; do
-        ${swaymsg} output "X11-$i" disable 2>/dev/null || true
-        wid_idx=$((i - 1))
-        if [ "$wid_idx" -lt "''${#wids[@]}" ]; then
-          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowsize "''${wids[$wid_idx]}" 1 1
-          DISPLAY="$XRDP_XDISPLAY" ${xdotool} windowmove "''${wids[$wid_idx]}" 0 0
-        fi
-        i=$((i + 1))
-      done
+      log "configuration complete"
     }
 
-    # Initial configuration
+    # Wait for sway to create all X11 outputs before first configure
+    wait_for_outputs || true
     configure
 
     # Watch for RandR changes (monitors added/removed) and reconfigure
     DISPLAY="$XRDP_XDISPLAY" ${xev} -root -event randr 2>/dev/null | while read -r line; do
       if [[ "$line" == *"RRScreenChangeNotify"* ]]; then
+        log "RandR change detected, reconfiguring..."
         configure
       fi
     done
@@ -119,7 +211,7 @@ let
     # X11 → Wayland (copy in Windows → paste in Linux)
     while DISPLAY="$XRDP_XDISPLAY" ${pkgs.clipnotify}/bin/clipnotify; do
       CONTENT=$(${xclip} -selection clipboard -display "$XRDP_XDISPLAY" -o 2>/dev/null) || true
-      LAST=$(cat /tmp/.clipbridge-last 2>/dev/null) || true
+      LAST=$(${cat} /tmp/.clipbridge-last 2>/dev/null) || true
       if [ -n "$CONTENT" ] && [ "$CONTENT" != "$LAST" ]; then
         printf '%s' "$CONTENT" > /tmp/.clipbridge-last
         printf '%s' "$CONTENT" | ${wlCopy}

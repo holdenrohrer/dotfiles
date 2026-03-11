@@ -7,6 +7,7 @@
     ./hardware-configuration.nix
     ./disk.nix
     ./hyperv.nix
+    ./mounts.nix
   ];
 
   networking.interfaces."eth0" = {
