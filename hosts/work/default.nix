@@ -33,6 +33,15 @@
   fileSystems."/var/log".neededForBoot = true;
   fileSystems."/var/tmp".neededForBoot = true;
 
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = "no";
+    };
+    listenAddresses = [{ addr = "192.168.100.2"; port = 22; }];
+  };
+
   # Work-specific persistence (extend as needed)
   # environment.persistence."/persist".directories = [ ];
 }

@@ -55,7 +55,22 @@
             :request-params '(("provider" . (("order" . ["Groq"]))))))
 
       (use-package gptel-magit
-        :hook (magit-mode . gptel-magit-install))
+        :hook (magit-mode . gptel-magit-install)
+        :config
+        ;; Fix: gptel calls the response callback with (reasoning . "...") cons
+        ;; cells for models that return extended thinking. gptel-magit assumes
+        ;; the response is always a string, causing "Wrong type argument:
+        ;; char-or-string-p" when it tries to (insert response).
+        ;; Override to add a stringp guard in the inner gptel-request callback.
+        (define-advice gptel-magit--generate (:override (callback) filter-reasoning)
+          (let ((diff (magit-git-output "diff" "--cached")))
+            (gptel-magit--request diff
+              :system gptel-magit-commit-prompt
+              :context nil
+              :callback (lambda (response _info)
+                          (when (stringp response)
+                            (let ((msg (gptel-magit--format-commit-message response)))
+                              (funcall callback msg))))))))
 
     '';
   };

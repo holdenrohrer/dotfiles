@@ -39,6 +39,18 @@
 
 (add-hook 'before-save-hook 'whitespace-cleanup)
 
+(defun czar/toggle-aggressive-formatting ()
+  "Toggle aggressive formatting (whitespace-cleanup on save + aggressive-indent)."
+  (interactive)
+  (if (memq 'whitespace-cleanup (default-value 'before-save-hook))
+      (progn
+        (remove-hook 'before-save-hook 'whitespace-cleanup)
+        (global-aggressive-indent-mode -1)
+        (message "Aggressive formatting OFF"))
+    (add-hook 'before-save-hook 'whitespace-cleanup)
+    (global-aggressive-indent-mode 1)
+    (message "Aggressive formatting ON")))
+
 ; Fold text at word boundaries
 ; And use the visual-fill-column package to
 (use-package visual-fill-column
