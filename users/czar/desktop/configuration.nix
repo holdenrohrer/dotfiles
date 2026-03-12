@@ -17,16 +17,21 @@ let
     exec ${pkgs.swaylock-effects}/bin/swaylock -i "$HOME"/bg/sc -f --indicator-radius 100 -e --clock --text-color 9f19d7 --indicator
   '';
 
-  clipW2X = pkgs.writeShellApplication {
-    name = "clip-w2x";
-    runtimeInputs = [ pkgs.coreutils pkgs.xclip ];
+  clipToWin = pkgs.writeShellApplication {
+    name = "clip-to-win";
+    runtimeInputs = [ pkgs.wl-clipboard pkgs.xclip ];
     text = ''
-      CONTENT=$(cat)
-      LAST=$(cat /tmp/.clipbridge-last 2>/dev/null) || true
-      if [ -n "$CONTENT" ] && [ "$CONTENT" != "$LAST" ]; then
-        printf '%s' "$CONTENT" > /tmp/.clipbridge-last
-        printf '%s' "$CONTENT" | xclip -selection clipboard -display "$1"
-      fi
+      [ -z "''${XRDP_XDISPLAY:-}" ] && exit 0
+      wl-paste | xclip -selection clipboard -display "$XRDP_XDISPLAY"
+    '';
+  };
+
+  clipToLinux = pkgs.writeShellApplication {
+    name = "clip-to-linux";
+    runtimeInputs = [ pkgs.wl-clipboard pkgs.xclip ];
+    text = ''
+      [ -z "''${XRDP_XDISPLAY:-}" ] && exit 0
+      xclip -selection clipboard -display "$XRDP_XDISPLAY" -o | wl-copy
     '';
   };
 
@@ -249,27 +254,6 @@ let
     '';
   };
 
-  clipbridge = pkgs.writeShellApplication {
-    name = "clipbridge-xrdp";
-    runtimeInputs = [ pkgs.coreutils pkgs.xclip pkgs.wl-clipboard pkgs.clipnotify clipW2X ];
-    text = ''
-      [ -z "''${XRDP_XDISPLAY:-}" ] && exit 0
-      rm -f /tmp/.clipbridge-last
-
-      # Wayland → X11 (copy in Linux → paste in Windows)
-      wl-paste --watch clip-w2x "$XRDP_XDISPLAY" &
-
-      # X11 → Wayland (copy in Windows → paste in Linux)
-      while DISPLAY="$XRDP_XDISPLAY" clipnotify; do
-        CONTENT=$(xclip -selection clipboard -display "$XRDP_XDISPLAY" -o 2>/dev/null) || true
-        LAST=$(cat /tmp/.clipbridge-last 2>/dev/null) || true
-        if [ -n "$CONTENT" ] && [ "$CONTENT" != "$LAST" ]; then
-          printf '%s' "$CONTENT" > /tmp/.clipbridge-last
-          printf '%s' "$CONTENT" | wl-copy
-        fi
-      done
-    '';
-  };
 in
 {
   imports = [
@@ -417,21 +401,6 @@ in
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
-  systemd.user.services.clipbridge-xrdp = {
-    Unit = {
-      Description = "Clipboard bridge between Wayland and xrdp X11";
-      PartOf = [ "graphical-session.target" ];
-      After = [ "graphical-session.target" ];
-    };
-    Service = {
-      Type = "exec";
-      ExecStart = "${lib.getExe clipbridge}";
-      Restart = "always";
-      RestartSec = 2;
-    };
-    Install.WantedBy = [ "graphical-session.target" ];
-  };
-
   systemd.user.services.url-watcher = {
     Unit = {
       Description = "Watch for URL file drops from Windows and open in Firefox";
@@ -471,6 +440,8 @@ in
       "--replace" "@XKB_VARIANT@" "${sharedConfig.keyboard.variant}"
       "--replace" "@XKB_OPTIONS@" "${sharedConfig.keyboard.options}"
       "--replace" "@uwsm@" "${pkgs.lib.getExe pkgs.uwsm}"
+      "--replace" "@clipToWin@" "${lib.getExe clipToWin}"
+      "--replace" "@clipToLinux@" "${lib.getExe clipToLinux}"
       "--replace" "@SWAY_EXIT@" "${if hostConfig.hostname == "work" then "# sway exit disabled under xrdp (breaks session)" else "bindsym $mod+Shift+e exit"}"
     ];
   };
