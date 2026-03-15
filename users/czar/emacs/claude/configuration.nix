@@ -30,7 +30,6 @@
       cleanupPeriodDays = 99999;
       alwaysThinkingEnabled = true;
       skipDangerousModePermissionPrompt = true;
-      enabledPlugins."feature-dev@claude-plugins-official" = true;
     };
 
     # Serialize settings + hooks into settings.json

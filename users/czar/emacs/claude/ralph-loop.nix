@@ -15,14 +15,26 @@ let
 
   runtimePath = lib.makeBinPath runtimeDeps;
 
+  # Strip shebang from source scripts since writeShellScriptBin adds its own
+  stripShebang = file:
+    builtins.concatStringsSep "\n"
+      (builtins.tail (lib.splitString "\n" (builtins.readFile file)));
+
   ralph-setup = pkgs.writeShellScriptBin "ralph-setup" ''
     export PATH="${runtimePath}:$PATH"
-    ${builtins.readFile "${pluginSrc}/scripts/setup-ralph-loop.sh"}
+    # When invoked with quoted "$ARGUMENTS", all args arrive as one string.
+    # Re-split for flag parsing (read -ra splits on whitespace without shell interpretation,
+    # so special chars like apostrophes are preserved as literal characters).
+    if [[ $# -eq 1 && "$1" == *" "* ]]; then
+      read -ra _ralph_args <<< "$1"
+      set -- "''${_ralph_args[@]}"
+    fi
+    ${stripShebang "${pluginSrc}/scripts/setup-ralph-loop.sh"}
   '';
 
   ralph-stop-hook = pkgs.writeShellScriptBin "ralph-stop-hook" ''
     export PATH="${runtimePath}:$PATH"
-    ${builtins.readFile "${pluginSrc}/hooks/stop-hook.sh"}
+    ${stripShebang "${pluginSrc}/hooks/stop-hook.sh"}
   '';
 
 in
@@ -41,7 +53,7 @@ in
     Execute the setup script to initialize the Ralph loop:
 
     ```!
-    "${ralph-setup}/bin/ralph-setup" $ARGUMENTS
+    "${ralph-setup}/bin/ralph-setup" "$ARGUMENTS"
     ```
 
     Please work on the task. When you try to exit, the Ralph loop will feed the SAME PROMPT back to you for the next iteration. You'll see your previous work in files and git history, allowing you to iterate and improve.
