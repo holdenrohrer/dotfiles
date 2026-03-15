@@ -24,6 +24,7 @@ in
     profiles.default = {
       id = 0;
       isDefault = true;
+      path = "ms0qptyr.default";
 
       search = {
         default = "Kagi";
