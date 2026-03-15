@@ -116,10 +116,6 @@
         extraHmImports = [ ./users/czar/desktop/games.nix ];
         hostConfig = {
           hostname = "personal";
-          git = {
-            email = "hr@hrhr.dev";
-            signingKey = "7725287258F052EE45294FA428CBDAAB3BBD8D9D";
-          };
         };
       };
 
@@ -127,10 +123,6 @@
         hostModules = [ ./hosts/work inputs.disko.nixosModules.disko ];
         hostConfig = {
           hostname = "work";
-          git = {
-            email = "WORK_EMAIL_HERE";
-            signingKey = "WORK_GPG_KEY_HERE";
-          };
         };
       };
     };

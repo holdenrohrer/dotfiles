@@ -54,6 +54,9 @@
     sway_sock="$(ls -t "$XDG_RUNTIME_DIR"/sway-ipc.*.sock 2>/dev/null | head -n1)"
     if [ -S "$sway_sock" ]; then
       ${pkgs.sway}/bin/swaymsg -s "$sway_sock" reload && echo "sway: reloaded" || echo "sway: reload failed"
+      # Sway reload re-enables all X11 outputs; restart multimon to reconfigure
+      sleep 0.5
+      systemctl --user restart xrdp-multimon 2>/dev/null && echo "multimon: restarted" || echo "multimon: restart failed"
     else
       echo "sway: skipped (no socket)"
     fi
