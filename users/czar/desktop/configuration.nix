@@ -172,10 +172,10 @@ let
           log "new: $rdp -> workspace $smallest"
         done
 
-        # 6. Save state
+        # 6. Save state (only active entries, prevents stale accumulation)
         : > "$STATE_FILE"
-        for rdp in "''${!db[@]}"; do
-          echo "$rdp=''${db[$rdp]}" >> "$STATE_FILE"
+        for rdp in "''${!ws_map[@]}"; do
+          echo "$rdp=''${ws_map[$rdp]}" >> "$STATE_FILE"
         done
 
         # 7. Enumerate X11 windows (sorted ascending by wid = X11-1, X11-2, ...)
@@ -224,6 +224,7 @@ let
             log "ERROR: failed to enable X11-$i"
           fi
           swaymsg workspace "$ws" output "X11-$i" || true
+          swaymsg "workspace $ws, move workspace to output X11-$i" || true
 
           wid_idx=$((i - 1))
           if [ "$wid_idx" -lt "''${#wids[@]}" ]; then
