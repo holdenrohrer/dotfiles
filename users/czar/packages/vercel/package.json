@@ -1,0 +1,11 @@
+{
+  "name": "vercel-wrapper",
+  "version": "50.32.5",
+  "bin": {
+    "vercel": "./node_modules/vercel/dist/vc.js",
+    "vc": "./node_modules/vercel/dist/vc.js"
+  },
+  "dependencies": {
+    "vercel": "50.32.5"
+  }
+}

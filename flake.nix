@@ -121,6 +121,7 @@
 
       work = mkHost {
         hostModules = [ ./hosts/work inputs.disko.nixosModules.disko ];
+        extraHmImports = [ ./users/czar/work.nix ];
         hostConfig = {
           hostname = "work";
         };

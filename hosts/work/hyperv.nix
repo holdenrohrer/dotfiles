@@ -51,6 +51,20 @@ let
   '';
 in
 {
+  # Stub out xrdp-chansrv so sesexec doesn't run it — we manage it via systemd instead.
+  nixpkgs.overlays = [(final: prev: {
+    xrdp = prev.xrdp.overrideAttrs (old: {
+      postFixup = (old.postFixup or "") + ''
+        mv $out/bin/xrdp-chansrv $out/bin/xrdp-chansrv-real
+        cat > $out/bin/xrdp-chansrv <<'STUB'
+#!/bin/sh
+exec sleep infinity
+STUB
+        chmod +x $out/bin/xrdp-chansrv
+      '';
+    });
+  })];
+
   virtualisation.hypervGuest.enable = true;
 
   # dxgkrnl for GPU-P (Intel Arc iGPU); hv_sock for enhanced session vsock
@@ -89,6 +103,20 @@ in
     serviceConfig = {
       Type = "exec";
       ExecStart = "${pkgs.coreutils}/bin/sleep infinity";
+    };
+  };
+
+  # xrdp channel server (clipboard, audio, drive redirection) — managed by
+  # systemd so it auto-restarts if it dies, unlike sesexec's built-in spawn.
+  systemd.user.services.xrdp-chansrv = {
+    description = "xrdp channel server";
+    partOf = [ "graphical-session.target" ];
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.xrdp}/bin/xrdp-chansrv-real";
+      Environment = "DISPLAY=:10";
+      Restart = "always";
+      RestartSec = 5;
     };
   };
 
