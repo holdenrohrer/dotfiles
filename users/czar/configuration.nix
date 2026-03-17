@@ -24,6 +24,7 @@
       git
       gnupg
       imagemagickBig
+      pandoc
       nmap
       just
       inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default

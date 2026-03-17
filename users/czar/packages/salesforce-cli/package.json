@@ -1,0 +1,7 @@
+{
+  "name": "salesforce-cli",
+  "version": "2.73.3",
+  "dependencies": {
+    "@salesforce/cli": "2.73.3"
+  }
+}
