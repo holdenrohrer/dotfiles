@@ -1,5 +1,9 @@
 ;; Avoid (require) and stick to (use-package)
 
+;; Open ticket.org by default on work machine
+(when (string= (system-name) "work")
+  (setq initial-buffer-choice "~/projects/ticket.org"))
+
 ;; Basic dark theme
 (load-theme 'wombat t)
 
