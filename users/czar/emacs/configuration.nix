@@ -35,6 +35,7 @@
       nix-mode
       undo-tree
       meson-mode
+      dockerfile-mode
       flycheck
       git-timemachine
       eat
