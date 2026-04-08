@@ -37,6 +37,7 @@
       jq
       poppler-utils
       curl
+      mutt
     ];
   };
 

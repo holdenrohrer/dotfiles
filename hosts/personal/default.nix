@@ -108,7 +108,6 @@
   # Personal-only system packages
   environment.systemPackages = with pkgs; [
     sl
-    mutt
     localsend
   ];
 }
