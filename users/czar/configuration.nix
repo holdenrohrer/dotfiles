@@ -35,7 +35,7 @@
       gh
       ripgrep
       jq
-      poppler_utils
+      poppler-utils
       curl
     ];
   };
