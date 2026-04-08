@@ -33,6 +33,10 @@
       nodejs # for claude-code MCP server
       texliveFull
       gh
+      ripgrep
+      jq
+      poppler_utils
+      curl
     ];
   };
 
