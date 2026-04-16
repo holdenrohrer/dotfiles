@@ -291,6 +291,7 @@ PROMPT is displayed to user. BRANCH is the branch name for the new worktree."
   (claude-code-ide-terminal-backend 'eat)
   (claude-code-ide-mcp-allowed-tools 'auto)
   (claude-code-ide-cli-extra-flags "--dangerously-skip-permissions")
+  (claude-code-ide-no-flicker t)
   :config
   (claude-code-ide-emacs-tools-setup)
   (defun czar/claude-code-hide-nobreak-space (buffer &rest _)
