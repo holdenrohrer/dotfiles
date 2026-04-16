@@ -7,6 +7,7 @@
     ./haskell.nix
     ./ocaml.nix
     ./lean.nix
+    ./go.nix
   ];
 
   # Keep an Emacs server running so emacsclient always has a socket.
@@ -35,7 +36,6 @@
       nix-mode
       undo-tree
       meson-mode
-      dockerfile-mode
       flycheck
       git-timemachine
       eat
@@ -69,11 +69,6 @@
 
   # Tree-sitter grammars - symlink to Emacs default search path
   home.file.".emacs.d/tree-sitter".source =
-    "${pkgs.emacsPackages.treesit-grammars.with-grammars (g: [
-      g.tree-sitter-typescript
-      g.tree-sitter-tsx
-      g.tree-sitter-javascript
-      g.tree-sitter-json
-    ])}/lib";
+    "${pkgs.emacsPackages.treesit-grammars.with-all-grammars}/lib";
 
 }

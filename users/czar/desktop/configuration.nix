@@ -267,7 +267,7 @@ in
     profiles.default = {
       id = 0;
       isDefault = true;
-      path = "ms0qptyr.default";
+      path = if hostConfig.hostname == "personal" then "ms0qptyr.default" else "default";
 
       search = {
         default = "Kagi";
@@ -345,7 +345,7 @@ in
         email = "hr@hrhr.dev";
       };
       pull.rebase = false;
-      init.defaultBranch = "main";
+      init.defaultBranch = "master";
       core.autocrlf = false;
     };
   };

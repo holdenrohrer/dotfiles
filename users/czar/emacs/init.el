@@ -4,6 +4,10 @@
 (when (string= (system-name) "work")
   (setq initial-buffer-choice "~/projects/ticket.org"))
 
+;; Org-mode
+(setq org-agenda-files '("~/projects/ticket.org"))
+(global-set-key (kbd "C-c a") #'org-agenda)
+
 ;; Basic dark theme
 (load-theme 'wombat t)
 
@@ -72,6 +76,36 @@
 ;; Tree-sitter modes for TypeScript/TSX
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+
+;; Apex (.cls, .trigger) — use java-ts-mode with extra keywords
+(add-to-list 'auto-mode-alist '("\\.cls\\'" . java-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.trigger\\'" . java-ts-mode))
+(defvar czar/apex-extra-keywords
+  '("trigger" "testMethod" "webService" "global" "with sharing"
+    "without sharing" "inherited sharing"))
+(add-hook 'java-ts-mode-hook
+          (lambda ()
+            (when (and buffer-file-name
+                       (string-match-p "\\.\\(cls\\|trigger\\)\\'" buffer-file-name))
+              (font-lock-add-keywords
+               nil
+               `((,(regexp-opt czar/apex-extra-keywords 'symbols)
+                  . font-lock-keyword-face))))))
+
+;; Go
+(add-to-list 'auto-mode-alist '("\\.go\\'" . go-ts-mode))
+(add-to-list 'auto-mode-alist '("go\\.mod\\'" . go-mod-ts-mode))
+(add-hook 'go-ts-mode-hook
+          (lambda ()
+            (setq-local indent-tabs-mode t)
+            (setq-local tab-width 4)
+            (add-hook 'before-save-hook
+                      (lambda ()
+                        (when (eglot-managed-p)
+                          (ignore-errors
+                            (eglot-code-action-organize-imports (point-min) (point-max)))
+                          (eglot-format-buffer)))
+                      nil t)))
 
 ;; Eglot (built-in LSP client)
 (use-package eglot
@@ -335,7 +369,9 @@ PROMPT is displayed to user. BRANCH is the branch name for the new worktree."
 
   ;; Aggressively indent everything
   (use-package aggressive-indent
-    :config (global-aggressive-indent-mode 1))
+    :config
+    (add-to-list 'aggressive-indent-excluded-modes 'go-ts-mode)
+    (global-aggressive-indent-mode 1))
 
 ;; ein: skip /login when server has no auth
 ;; jupyter_server 2.0+ removes the /login endpoint when no token is set,

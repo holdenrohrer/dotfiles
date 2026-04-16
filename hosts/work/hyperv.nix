@@ -2,26 +2,6 @@
 { config, pkgs, lib, ... }:
 
 let
-  pipewire-module-xrdp = pkgs.stdenv.mkDerivation rec {
-    pname = "pipewire-module-xrdp";
-    version = "0.1";
-
-    src = pkgs.fetchFromGitHub {
-      owner = "neutrinolabs";
-      repo = "pipewire-module-xrdp";
-      rev = "v${version}";
-      hash = "sha256-ZiKVAMAFBkMpZFqrn4hjZZPxdR+sBtcd4W30z8pkdzk=";
-    };
-
-    nativeBuildInputs = with pkgs; [ autoreconfHook pkg-config ];
-    buildInputs = [ pkgs.pipewire ];
-
-    configureFlags = [
-      "--with-module-dir=${placeholder "out"}/lib/pipewire-0.3"
-      "--with-xdgautostart-dir=${placeholder "out"}/etc/xdg/autostart"
-    ];
-  };
-
   swaySession = pkgs.writeShellScript "sway-xrdp" ''
     # Source home-manager session variables (QT theming, XDG dirs, etc.)
     . /etc/profiles/per-user/czar/etc/profile.d/hm-session-vars.sh
@@ -42,10 +22,6 @@ let
     # xorgxrdp reports monitors asynchronously, so we can't detect the
     # count here. The xrdp-multimon exec script disables unused outputs.
     export WLR_X11_OUTPUTS=6
-
-    # Load xrdp audio sink into PipeWire
-    export PIPEWIRE_MODULE_DIR="${pipewire-module-xrdp}/lib/pipewire-0.3:${pkgs.pipewire}/lib/pipewire-0.3"
-    ${pipewire-module-xrdp}/libexec/pipewire-module-xrdp/load_pw_modules.sh &
 
     exec ${pkgs.sway}/bin/sway
   '';
@@ -80,7 +56,8 @@ STUB
         --replace-fail "#vmconnect=true" "vmconnect=true" \
         --replace-fail "h264_frame_interval=16" "h264_frame_interval=8" \
         --replace-fail "rfx_frame_interval=32" "rfx_frame_interval=8" \
-        --replace-fail "normal_frame_interval=40" "normal_frame_interval=8"
+        --replace-fail "normal_frame_interval=40" "normal_frame_interval=8" \
+        --replace-fail "rdpsnd=true" "rdpsnd=false"
       sed -i '/^\[ChansrvLogging\]/,/^LogLevel=/{s/^LogLevel=.*/LogLevel=DEBUG/}' $out/sesman.ini
     '';
   };
