@@ -46,6 +46,11 @@ STUB
   # dxgkrnl for GPU-P (Intel Arc iGPU); hv_sock for enhanced session vsock
   boot.kernelModules = [ "dxgkrnl" "hv_sock" ];
 
+  # Use Hyper-V's paravirtual clocksource instead of bare TSC — bare tsc drifts
+  # badly across host sleep/resume and leaves systemd-timesyncd slewing for
+  # tens of minutes before stepping.
+  boot.kernelParams = [ "clocksource=hyperv_clocksource_tsc_page" ];
+
   services.xrdp = {
     enable = true;
     openFirewall = true;
