@@ -42,6 +42,7 @@
       aggressive-indent
       perspective
       ein
+      svelte-mode
       (melpaBuild {
         pname = "claude-code-ide";
         version = "0.0.1";
@@ -65,6 +66,7 @@
     nodePackages.typescript
     nixd
     nodePackages.bash-language-server
+    nodePackages.svelte-language-server
   ];
 
   # Tree-sitter grammars - symlink to Emacs default search path

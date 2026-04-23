@@ -77,6 +77,9 @@
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
+(use-package svelte-mode
+  :mode "\\.svelte\\'")
+
 ;; Apex (.cls, .trigger) — use java-ts-mode with extra keywords
 (add-to-list 'auto-mode-alist '("\\.cls\\'" . java-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.trigger\\'" . java-ts-mode))
@@ -112,6 +115,7 @@
   :hook (prog-mode . eglot-ensure)
   :config
   (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
+  (add-to-list 'eglot-server-programs '(svelte-mode . ("svelteserver" "--stdio")))
   ;; Use ormolu for Haskell formatting
   (setq-default eglot-workspace-configuration
                 '(:haskell (:formattingProvider "ormolu")))
