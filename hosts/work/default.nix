@@ -43,5 +43,10 @@
   };
 
   # Work-specific persistence (extend as needed)
-  # environment.persistence."/persist".directories = [ ];
+  environment.persistence."/persist".directories = [
+    "/var/lib/docker"
+  ];
+
+  virtualisation.docker.enable = true;
+  users.users.czar.extraGroups = [ "docker" ];
 }
