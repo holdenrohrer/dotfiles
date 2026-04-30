@@ -62,7 +62,9 @@ STUB
         --replace-fail "h264_frame_interval=16" "h264_frame_interval=8" \
         --replace-fail "rfx_frame_interval=32" "rfx_frame_interval=8" \
         --replace-fail "normal_frame_interval=40" "normal_frame_interval=8" \
-        --replace-fail "rdpsnd=true" "rdpsnd=false"
+        --replace-fail "rdpsnd=true" "rdpsnd=false" \
+        --replace-fail "certificate=/etc/xrdp/cert.pem" "certificate=/persist/etc/xrdp/cert.pem" \
+        --replace-fail "key_file=/etc/xrdp/key.pem" "key_file=/persist/etc/xrdp/key.pem"
       sed -i '/^\[ChansrvLogging\]/,/^LogLevel=/{s/^LogLevel=.*/LogLevel=DEBUG/}' $out/sesman.ini
     '';
   };

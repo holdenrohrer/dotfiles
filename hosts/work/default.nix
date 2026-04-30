@@ -42,11 +42,32 @@
     listenAddresses = [{ addr = "192.168.100.2"; port = 22; }];
   };
 
-  # Work-specific persistence (extend as needed)
+  impermanence-wipe = {
+    enable = true;
+    device = "/dev/mapper/pool-root";
+    subvolume = "@/root";
+    retentionDays = null;
+  };
+
   environment.persistence."/persist".directories = [
+    "/etc/ssh"
     "/var/lib/docker"
   ];
 
   virtualisation.docker.enable = true;
   users.users.czar.extraGroups = [ "docker" ];
+  environment.persistence."/persist".users.czar = {
+    directories = [
+      ".config/gcloud"
+      ".sfdx"
+      ".ansible"
+      ".npm"
+      ".local/share/com.vercel.cli"
+      "drafts"
+      "bg"
+    ];
+    files = [
+      ".netrc"
+    ];
+  };
 }

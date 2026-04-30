@@ -97,6 +97,7 @@
       specialArgs = { inherit inputs outputs sharedConfig hostConfig; };
       modules = hostModules ++ [
         ./configuration.nix
+        ./impermanence.nix
         impermanence.nixosModules.impermanence
         home-manager.nixosModules.home-manager
         {

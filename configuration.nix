@@ -4,34 +4,6 @@
 { config, lib, pkgs, inputs, outputs, sharedConfig, hostConfig, ... }:
 
 {
-  environment.persistence."/persist" = {
-    hideMounts = true;
-    directories = [
-      "/var/lib/nixos"
-      "/etc/NetworkManager/system-connections"  # NetworkManager connections added imperatively
-    ];
-    files = [
-      "/etc/machine-id"
-    ];
-    users.czar = {
-      directories = [
-        ".mozilla"
-        ".vim"
-        ".gnupg"
-        ".ssh"
-        ".password-store"
-        "projects"
-        ".local/share/direnv/allow"
-        ".cache/nix-index"
-        ".claude"
-        ".config/gh"
-      ];
-      files = [
-        ".claude.json"
-      ];
-    };
-  };
-
   # Emacs overlay for native compilation (faster startup & execution)
   nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
 
