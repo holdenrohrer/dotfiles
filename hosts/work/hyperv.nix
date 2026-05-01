@@ -51,6 +51,18 @@ STUB
   # tens of minutes before stepping.
   boot.kernelParams = [ "clocksource=hyperv_clocksource_tsc_page" ];
 
+  # Use chrony with the Hyper-V PTP clock as a reference — systemd-timesyncd
+  # can't read local PTP devices, so after host sleep/resume the clock stays
+  # wrong until the next NTP poll. chrony reads /dev/ptp_hyperv directly and
+  # makestep 1 -1 forces an immediate step for any offset > 1s, indefinitely.
+  services.chrony = {
+    enable = true;
+    extraConfig = ''
+      refclock PHC /dev/ptp_hyperv poll 3 dpoll -2 offset 0 prefer
+      makestep 1 -1
+    '';
+  };
+
   services.xrdp = {
     enable = true;
     openFirewall = true;
