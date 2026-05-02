@@ -26,6 +26,7 @@
     ".local/share/Anki2"
     ".local/share/PrismLauncher"
     ".local/share/lutris"
+    ".local/share/Mindustry"
   ];
 
   # Laptop power management
