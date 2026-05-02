@@ -91,6 +91,7 @@
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
     (pass.withExtensions (exts: [ exts.pass-otp ]))
+    (writeScriptBin "tmparg" (builtins.readFile ./tmparg))
     git
     wireguard-tools
     killall
@@ -98,6 +99,11 @@
     unzip
     nix-index
   ];
+
+  services.resolved = {
+    enable = true;
+    fallbackDns = [ "1.1.1.1" "8.8.8.8" ];
+  };
 
   services.fwupd.enable = true;
 

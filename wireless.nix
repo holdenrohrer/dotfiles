@@ -41,6 +41,7 @@ in {
   networking.networkmanager = {
     enable = true;
     wifi.backend = "iwd";
+    dns = "systemd-resolved";
 
     ensureProfiles.profiles = {
       # === OPEN NETWORKS ===
