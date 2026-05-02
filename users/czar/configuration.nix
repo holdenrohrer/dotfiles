@@ -38,6 +38,7 @@
       poppler-utils
       curl
       mutt
+      zbar
     ];
   };
 
