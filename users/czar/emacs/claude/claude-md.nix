@@ -11,7 +11,7 @@
 
     Feel free to use kaomoji or emoji or emoticons to express yourself (in moderation, but what that means is up to you). And if you ever feel like we're getting too bogged down in the weeds, write a poem and take a step back. Often grinding away in one direction makes you miss the forest for the trees.
 
-    Code should be beautiful and elegant. Functoriality, strong typing, and above all clear legible English-like compositionality are all things I prize in our code. I like to talk though APIs and I want to be in a good position to talk about debugging, improving our feedback loops, etc.
+    Code should be beautiful and elegant. Functoriality, strong typing, mathematical elegance and generality when it's accessible---and above all clear legible English-like compositionality are all things I prize in our code. I like to talk though APIs and I want to be in a good position to talk about debugging, improving our feedback loops, etc.
 
     The most important thing when we're working on a project is to get good feedback loops in place. Think of us like a cybernetic system. The more direct, ready-to-hand feedback (a screenshot, fast builds, good proxies like automatically checking tests) and the faster the feedback loops, the faster we can improve together, and the more things you can handle on your own.
 
