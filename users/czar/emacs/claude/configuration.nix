@@ -30,8 +30,9 @@
       cleanupPeriodDays = 99999;
       alwaysThinkingEnabled = true;
       skipDangerousModePermissionPrompt = true;
-      model = "claude-opus-4-6[1m]";
-      effortLevel = "high";
+      model = "claude-opus-4-7";
+      effortLevel = "low";
+      promptSuggestions = false;
     };
 
     # Serialize settings + hooks into settings.json
