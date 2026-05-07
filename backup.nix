@@ -36,6 +36,14 @@
     extraCreateArgs = "--stats";
   };
 
+  # Be a polite background citizen: only use CPU/IO when nothing else wants it.
+  systemd.services.borgbackup-job-persist.serviceConfig = {
+    CPUSchedulingPolicy = "idle";
+    IOSchedulingClass = "idle";
+    Nice = 19;
+    IOWeight = 10;
+  };
+
   # Trigger backup eagerly when network comes up, rate-limited to at most once per hour
   networking.networkmanager.dispatcherScripts = [{
     type = "basic";
