@@ -5,7 +5,13 @@
 
 {
   # Emacs overlay for native compilation (faster startup & execution)
-  nixpkgs.overlays = [ inputs.emacs-overlay.overlay ];
+  nixpkgs.overlays = [
+    inputs.emacs-overlay.overlay
+    (final: prev: {
+      passWithOtp = prev.pass.withExtensions (exts: [ exts.pass-otp ]);
+      passff-host = prev.passff-host.override { pass = final.passWithOtp; };
+    })
+  ];
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -90,7 +96,7 @@
 
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
-    (pass.withExtensions (exts: [ exts.pass-otp ]))
+    passWithOtp
     (writeScriptBin "tmparg" (builtins.readFile ./tmparg))
     git
     wireguard-tools
