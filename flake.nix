@@ -4,6 +4,7 @@
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-25.11";
@@ -96,6 +97,16 @@
       inherit system;
       specialArgs = { inherit inputs outputs sharedConfig hostConfig; };
       modules = hostModules ++ [
+        {
+          nixpkgs.overlays = [
+            (final: prev: {
+              unstable = import inputs.nixpkgs-unstable {
+                inherit system;
+                config = prev.config;
+              };
+            })
+          ];
+        }
         ./configuration.nix
         ./impermanence.nix
         impermanence.nixosModules.impermanence
