@@ -70,6 +70,7 @@ in {
           ".local/share/direnv/allow"
           ".cache/nix-index"
           ".claude"
+          ".codex"
           ".config/gh"
         ];
         files = [
