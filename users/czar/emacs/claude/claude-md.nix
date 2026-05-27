@@ -5,6 +5,8 @@
     text = ''
     After modifying code, use getDiagnostics to check for type errors, syntax errors, and other LSP diagnostics before finishing.
 
+    Never override git `user.email` or `user.name`.
+
     When `git push` fails with SSH permission denied, just retry the same command. The user has a passphrase-protected SSH key and missed the password prompt. Don't worry about troubleshooting SSH keys, ssh-add, or switch to HTTPS.
 
     When you're running any long-running process, especially builds, or long watches, NEVER pipe it to a tail -##. It deletes a lot of useful information and makes it incredibly difficult to early-stop if needed. Instead, | tee /tmp/a-file.log | tail -40 or pipe it to a log file directly and tail -20 it regularly to see what updates are happening.
