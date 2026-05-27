@@ -22,6 +22,7 @@
     };
     packages = with pkgs; [
       git
+      jujutsu
       gnupg
       imagemagickBig
       pandoc
