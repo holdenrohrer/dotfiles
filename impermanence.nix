@@ -55,6 +55,8 @@ in {
       directories = [
         "/var/lib/nixos"
         "/etc/NetworkManager/system-connections"
+        "/root/.cache/borg"
+        "/root/.config/borg"
       ];
       files = [
         "/etc/machine-id"
