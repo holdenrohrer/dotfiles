@@ -14,7 +14,6 @@
   environment.persistence."/persist".directories = [
     "/etc/wireguard"
     "/var/lib/iwd"          # iwd state (known networks added imperatively)
-    "/var/lib/docker"
     "/var/lib/tailscale"
     "/etc/borg"             # SSH key + passphrase for borgbackup
   ];
@@ -67,6 +66,7 @@
   };
 
   virtualisation.docker.enable = true;
+  virtualisation.docker.daemon.settings.data-root = "/cache/docker";
 
   # mDNS for printer discovery
   services.avahi = {

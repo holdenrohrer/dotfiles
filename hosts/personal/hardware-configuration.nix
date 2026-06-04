@@ -48,6 +48,12 @@
       options = [ "subvol=@persist" ];
     };
 
+  fileSystems."/cache" =
+    { device = "/dev/mapper/pool-root";
+      fsType = "btrfs";
+      options = [ "subvol=@cache" ];
+    };
+
 
   #fileSystems."/var/lib" =
   #  { device = "/dev/mapper/pool-root";
