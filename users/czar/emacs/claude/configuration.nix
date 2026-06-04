@@ -30,7 +30,7 @@
       cleanupPeriodDays = 99999;
       alwaysThinkingEnabled = true;
       skipDangerousModePermissionPrompt = true;
-      model = "claude-opus-4-7";
+      model = "claude-opus-4-8";
       effortLevel = "low";
       promptSuggestions = false;
     };
