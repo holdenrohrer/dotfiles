@@ -15,6 +15,13 @@
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
 
+;; epresent (M-x epresent-run / F5 in an org buffer) is a major mode derived
+;; from org-mode, so evil starts it in normal state and steals every one of its
+;; single-key controls (n=search, p=paste, q=record-macro, ...). Start epresent
+;; buffers in evil's emacs state instead, so n/p/f/q/c reach epresent's own map.
+(with-eval-after-load 'evil
+  (evil-set-initial-state 'epresent-mode 'emacs))
+
 ;; Basic dark theme
 (load-theme 'wombat t)
 
