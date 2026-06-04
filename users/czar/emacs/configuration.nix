@@ -25,6 +25,7 @@
     extraPackages = epkgs: with epkgs; [
       evil
       evil-collection
+      evil-org
       magit
       magit-section
       transient

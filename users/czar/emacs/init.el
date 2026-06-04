@@ -8,6 +8,13 @@
 (setq org-agenda-files '("~/projects/ticket.org"))
 (global-set-key (kbd "C-c a") #'org-agenda)
 
+;; evil-org: vim-flavored heading manipulation (t cycles TODO, >>/<<
+;; promote/demote, o/O insert headings, dah/vah on subtrees, etc.)
+(add-hook 'org-mode-hook #'evil-org-mode)
+(with-eval-after-load 'org-agenda
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
 ;; Basic dark theme
 (load-theme 'wombat t)
 
