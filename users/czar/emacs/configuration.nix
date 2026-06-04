@@ -43,6 +43,7 @@
       aggressive-indent
       perspective
       ein
+      epresent
       svelte-mode
       (melpaBuild {
         pname = "claude-code-ide";
