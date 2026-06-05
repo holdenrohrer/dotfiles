@@ -100,6 +100,7 @@
     (writeScriptBin "tmparg" (builtins.readFile ./tmparg))
     git
     wireguard-tools
+    dig
     killall
     python3
     unzip
