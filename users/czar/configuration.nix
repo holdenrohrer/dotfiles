@@ -4,6 +4,7 @@
     ./emacs/configuration.nix
     ./emacs/claude/configuration.nix
     ./desktop/configuration.nix
+    ./brain
     ./zsh.nix
   ];
 
