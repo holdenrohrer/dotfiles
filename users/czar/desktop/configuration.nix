@@ -255,6 +255,118 @@ let
     '';
   };
 
+  # --- Wallpaper control: rotating ~/bg collection + Wallhaven refill ---
+  # Everything hangs off the ~/bg/sc symlink ("sc" = "current"), which
+  # sway.config and swaylock already read. bg-set repoints it and re-renders.
+  bgSet = pkgs.writeShellApplication {
+    name = "bg-set";
+    runtimeInputs = [ pkgs.sway pkgs.jq pkgs.coreutils pkgs.findutils ];
+    text = ''
+      # bg-set <image>: set <image> as wallpaper on every ACTIVE output.
+      # Per-active-output (never '*') to dodge the swaybg phantom-output
+      # orphaned-surface bug on this xrdp multimon setup.
+      img="$(readlink -f "$1")"
+      [ -f "$img" ] || { echo "bg-set: no such file: $1" >&2; exit 1; }
+      export SWAYSOCK
+      SWAYSOCK="''${SWAYSOCK:-$(find /run/user/1000 -maxdepth 1 -name 'sway-ipc.*.sock' -print -quit 2>/dev/null)}"
+      [ -n "$SWAYSOCK" ] || { echo "bg-set: no sway socket (not in a graphical session)"; exit 0; }
+      mkdir -p "$HOME/bg"
+      ln -sfn "$img" "$HOME/bg/sc"
+      for out in $(swaymsg -t get_outputs | jq -r '.[] | select(.active) | .name'); do
+        swaymsg output "$out" bg "$img" fill >/dev/null
+      done
+      echo "bg-set: $img"
+    '';
+  };
+
+  bgCycle = pkgs.writeShellApplication {
+    name = "bg-cycle";
+    runtimeInputs = [ pkgs.coreutils bgSet ];
+    text = ''
+      # bg-cycle: pick a random image from ~/bg (avoiding the current one).
+      shopt -s nullglob
+      imgs=("$HOME"/bg/*.jpg "$HOME"/bg/*.jpeg "$HOME"/bg/*.png)
+      [ "''${#imgs[@]}" -gt 0 ] || { echo "bg-cycle: no images in ~/bg" >&2; exit 1; }
+      cur="$(readlink -f "$HOME/bg/sc" 2>/dev/null || true)"
+      pick="''${imgs[RANDOM % ''${#imgs[@]}]}"
+      if [ "''${#imgs[@]}" -gt 1 ]; then
+        tries=0
+        while [ "$(readlink -f "$pick")" = "$cur" ] && [ "$tries" -lt 10 ]; do
+          pick="''${imgs[RANDOM % ''${#imgs[@]}]}"; tries=$((tries + 1))
+        done
+      fi
+      exec bg-set "$pick"
+    '';
+  };
+
+  bgAdd = pkgs.writeShellApplication {
+    name = "bg-add";
+    runtimeInputs = [ pkgs.coreutils bgSet ];
+    text = ''
+      # bg-add: copy the current wallpaper into ~/bg (if new) and adopt the copy.
+      cur="$(readlink -f "$HOME/bg/sc" 2>/dev/null || true)"
+      [ -f "$cur" ] || { echo "bg-add: no current wallpaper" >&2; exit 1; }
+      case "$cur" in "$HOME"/bg/*) echo "bg-add: already in ~/bg"; exit 0 ;; esac
+      dest="$HOME/bg/$(basename "$cur")"
+      cp -n "$cur" "$dest"
+      echo "bg-add: added $(basename "$cur")"
+      exec bg-set "$dest"
+    '';
+  };
+
+  bgFetch = pkgs.writeShellApplication {
+    name = "bg-fetch";
+    runtimeInputs = [ pkgs.curl pkgs.jq pkgs.coreutils bgSet ];
+    text = ''
+      # bg-fetch: download a random >=1920x1200 SFW Wallhaven image and set it.
+      cache="$HOME/.cache/wallpaper"; mkdir -p "$cache"
+      q="sorting=random&atleast=1920x1200&purity=100&categories=100"
+      json="$(curl -sS --max-time 20 "https://wallhaven.cc/api/v1/search?$q")"
+      url="$(jq -r '.data[0].path' <<<"$json")"
+      id="$(jq -r '.data[0].id' <<<"$json")"
+      { [ -n "$url" ] && [ "$url" != null ]; } || { echo "bg-fetch: no result from Wallhaven" >&2; exit 1; }
+      out="$cache/wallhaven-$id.''${url##*.}"
+      curl -sS --max-time 60 -o "$out" "$url"
+      exec bg-set "$out"
+    '';
+  };
+
+  # Centered Wayland launcher (bemenu-run + flags). Wrapped in a script so the
+  # sway keybind can call the bare name `menu-run` — flag tweaks then need only
+  # a rebuild, never a sway reload.
+  menuRun = pkgs.writeShellApplication {
+    name = "menu-run";
+    runtimeInputs = [ pkgs.bemenu ];
+    text = ''exec bemenu-run -c -i -l 10 -W 0.3 "$@"'';
+  };
+
+  bgMenu = pkgs.writeShellApplication {
+    name = "bg-menu";
+    # bemenu (Wayland-native, centered via -c) — plain dmenu is X11 and can't
+    # open a display under this xrdp/sway session, so it would fail silently.
+    runtimeInputs = [ pkgs.coreutils pkgs.bemenu bgCycle bgFetch bgAdd bgSet ];
+    text = ''
+      # bg-menu: bemenu front-end for wallpaper control (bound to a sway key).
+      cur="$(readlink -f "$HOME/bg/sc" 2>/dev/null || echo none)"
+      raw=( "🎲 Cycle now (random from ~/bg)" "🌐 Fetch fresh (Wallhaven)" "🖼 Pick from ~/bg…" )
+      case "$cur" in "$HOME"/bg/*) : ;; *) raw=( "➕ Add current to ~/bg" "''${raw[@]}" ) ;; esac
+      # number the entries so you can just type 1/2/3 and hit Enter
+      opts=(); i=1
+      for o in "''${raw[@]}"; do opts+=( "$i  $o" ); i=$((i + 1)); done
+      choice="$(printf '%s\n' "''${opts[@]}" | bemenu -c -i -l 10 -W 0.25 -p 'wallpaper')" || exit 0
+      case "$choice" in
+        *🎲*) exec bg-cycle ;;
+        *🌐*) exec bg-fetch ;;
+        *➕*) exec bg-add ;;
+        *🖼*)
+          shopt -s nullglob; cd "$HOME/bg"
+          files=(*.jpg *.jpeg *.png)
+          pick="$(printf '%s\n' "''${files[@]}" | bemenu -c -i -l 15 -W 0.25 -p 'pick bg')" || exit 0
+          [ -n "$pick" ] && exec bg-set "$HOME/bg/$pick" ;;
+      esac
+    '';
+  };
+
 in
 {
   imports = [
@@ -366,6 +478,8 @@ in
   home.packages = with pkgs; [
     screenshot
     openUrl
+    bgMenu    # $mod+Shift+w — on PATH so the keybind is a stable bare name
+    menuRun   # $mod+space   — ditto (keeps sway.config static → no reloads)
     feh
     anki
     signal-desktop
@@ -402,6 +516,26 @@ in
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
+  systemd.user.services.wallpaper-cycle = {
+    Unit = {
+      Description = "Rotate wallpaper from the ~/bg collection";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${lib.getExe bgCycle}";
+    };
+  };
+
+  systemd.user.timers.wallpaper-cycle = {
+    Unit.Description = "Rotate wallpaper daily (and catch up on login if missed)";
+    Timer = {
+      OnCalendar = "daily";
+      Persistent = true;
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
+
   systemd.user.services.url-watcher = {
     Unit = {
       Description = "Watch for URL file drops from Windows and open in Firefox";
@@ -426,7 +560,6 @@ in
       "--replace" "@firefox@" "${pkgs.lib.getExe pkgs.firefox}"
       "--replace" "@i3status@" "${pkgs.lib.getExe' pkgs.i3status "i3status"}"
       "--replace" "@foot@" "${pkgs.lib.getExe pkgs.foot}"
-      "--replace" "@dmenu_run@" "${pkgs.lib.getExe' pkgs.dmenu "dmenu_run"}"
       "--replace" "@ydotool@" "${pkgs.lib.getExe' pkgs.ydotool "ydotool"}"
       "--replace" "@swayidle@" "${if hostConfig.hostname == "work" then "true" else pkgs.lib.getExe' pkgs.swayidle "swayidle"}"
       "--replace" "@swaymsg@" "${pkgs.lib.getExe' pkgs.sway "swaymsg"}"
@@ -446,4 +579,29 @@ in
       "--replace" "@SWAY_EXIT@" "${if hostConfig.hostname == "work" then "# sway exit disabled under xrdp (breaks session)" else "bindsym $mod+Shift+e exit"}"
     ];
   };
+
+  # Reload the running sway ONLY when its config genuinely changed this
+  # generation. ~/.config/sway/config symlinks to a /nix/store path whose hash
+  # changes iff the content changes — so comparing the resolved path against a
+  # recorded baseline detects real config changes. Script/flag-only rebuilds
+  # (bare-name keybinds → static sway.config) leave it untouched and reload
+  # nothing, sparing the disruptive multi-monitor reshuffle.
+  home.activation.reloadSwayOnConfigChange =
+    lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      swayCfg="$(readlink -f "${config.xdg.configHome}/sway/config" 2>/dev/null || true)"
+      stateFile="${config.xdg.stateHome}/sway/loaded-config"
+      prev="$(cat "$stateFile" 2>/dev/null || true)"
+      if [ -n "$swayCfg" ] && [ "$swayCfg" != "$prev" ]; then
+        # Skip the reload on the very first run (no baseline yet) so adopting
+        # this hook doesn't itself trigger a spurious reshuffle.
+        if [ -n "$prev" ]; then
+          sock="$(find "/run/user/$(id -u)" -maxdepth 1 -name 'sway-ipc.*.sock' -print -quit 2>/dev/null || true)"
+          if [ -n "$sock" ]; then
+            $DRY_RUN_CMD env SWAYSOCK="$sock" ${pkgs.sway}/bin/swaymsg reload > /dev/null 2>&1 || true
+          fi
+        fi
+        mkdir -p "$(dirname "$stateFile")"
+        printf '%s\n' "$swayCfg" > "$stateFile"
+      fi
+    '';
 }
