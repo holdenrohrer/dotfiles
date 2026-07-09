@@ -68,6 +68,7 @@ in {
           ".gnupg"
           ".ssh"
           ".password-store"
+          "brain"
           "projects"
           ".local/share/direnv/allow"
           ".cache/nix-index"
