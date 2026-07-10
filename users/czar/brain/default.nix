@@ -38,6 +38,9 @@ in
     Service = {
       Type = "oneshot";
       ExecStart = "${brain-beat}/bin/brain-beat";
+      # The auth door: subscription OAuth (~/.claude) by default; drop
+      # ANTHROPIC_API_KEY into this file to flip to API billing. Optional.
+      EnvironmentFile = "-%h/.config/brain/env";
     };
   };
 
