@@ -30,6 +30,13 @@ let
     exec ${pkgs.nodejs}/bin/npx -y ccusage@latest "$@"
   '';
 
+  # $mod+Shift+j — the conversation surface: floating terminal, scrollback
+  # above, input below; lines become captures, replies weave back in.
+  brain-chat = pkgs.writeShellScriptBin "brain-chat" ''
+    export PATH="${loomPath}:${claude}/bin:${pkgs.ncurses}/bin:$PATH"
+    exec ${pkgs.foot}/bin/foot -a brain-chat -w 900x600 ${loom}/bin/brain-chat
+  '';
+
   # Heartbeat wrapper: pure shell (a git pull) when nothing is unprocessed,
   # wakes fable (claude -p, Max subscription creds) when something is.
   brain-beat = pkgs.writeShellScriptBin "brain-beat" ''
@@ -38,7 +45,7 @@ let
   '';
 in
 {
-  home.packages = [ brain-box brain-beat ccusage ];
+  home.packages = [ brain-box brain-beat brain-chat ccusage ];
 
   systemd.user.services.brain-think = {
     Unit.Description = "Loom heartbeat: fable weaves unprocessed entries";

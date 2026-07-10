@@ -1,33 +1,22 @@
---- a/eat.el	2026-07-10 13:03:19.309662940 -0400
-+++ b/eat.el	2026-07-10 13:03:19.310662954 -0400
-@@ -1793,9 +1793,28 @@
+--- a/eat.el	2026-07-10 13:32:43.763144033 -0400
++++ b/eat.el	2026-07-10 13:33:45.255971711 -0400
+@@ -1793,7 +1793,18 @@
            ;; Replace any partially-overwritten character with
            ;; spaces.
            (eat--t-fix-partial-multi-col-char))
 -        (when (> (eat--t-cur-x cursor) (eat--t-disp-width disp))
-+        ;; Wrap when the cursor moved past the right margin, or when a
-+        ;; pending multi-column glyph cannot fit in the columns left on
-+        ;; the current line.  The latter case is essential: a wide char
-+        ;; landing on the last column writes nothing and leaves the
-+        ;; cursor *at* (not past) the margin, so without this the write
-+        ;; loop spins forever.
++        ;; Wrap when the cursor moved past the right margin, or when the
++        ;; next multi-column character cannot fit in the columns left on
++        ;; the current line.  Without the latter case a double-width
++        ;; character on the last column writes nothing and leaves the
++        ;; cursor *at* (not past) the margin, so the loop never advances.
 +        (when (or (> (eat--t-cur-x cursor) (eat--t-disp-width disp))
 +                  (and (< inserted-till end)
 +                       (car multi-col-char-indices)
-+                       (= (car (car multi-col-char-indices))
-+                          inserted-till)
++                       (= (car (car multi-col-char-indices)) inserted-till)
 +                       (> (cdr (car multi-col-char-indices))
 +                          (- (eat--t-disp-width disp)
 +                             (1- (eat--t-cur-x cursor))))))
            (if (not (eat--t-term-auto-margin eat--t-term))
--              (eat--t-cur-left 1)
-+              (if (> (eat--t-cur-x cursor) (eat--t-disp-width disp))
-+                  (eat--t-cur-left 1)
-+                ;; No auto-wrap and the wide glyph can't fit at the
-+                ;; margin: skip it rather than spin forever.
-+                (setq multi-col-char-indices
-+                      (cdr multi-col-char-indices))
-+                (cl-incf inserted-till))
+               (eat--t-cur-left 1)
              (when (< inserted-till end)
-               (when (= (eat--t-cur-y cursor) scroll-end)
-                 (eat--t-scroll-up 1 'as-side-effect))

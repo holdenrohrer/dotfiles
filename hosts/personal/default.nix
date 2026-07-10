@@ -66,6 +66,7 @@
   };
 
   virtualisation.docker.enable = true;
+  virtualisation.docker.package = pkgs.docker_29;
   virtualisation.docker.daemon.settings.data-root = "/cache/docker";
 
   # mDNS for printer discovery

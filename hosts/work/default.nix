@@ -55,6 +55,7 @@
   ];
 
   virtualisation.docker.enable = true;
+  virtualisation.docker.package = pkgs.docker_29;
   users.users.czar.extraGroups = [ "docker" ];
   environment.persistence."/persist".users.czar = {
     directories = [
