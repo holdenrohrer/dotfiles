@@ -39,7 +39,19 @@
       meson-mode
       flycheck
       git-timemachine
-      eat
+      # eat 0.9.4 freezes Emacs in an infinite loop when a double-width glyph
+      # (CJK/emoji, e.g. 💾) lands on the terminal's last column — the wide char
+      # can't fit, writes nothing, and the auto-wrap check never fires so
+      # eat--t-write spins at 100% CPU. Claude Code's TUI triggers it reliably.
+      # Not fixed upstream. Patch broadens the wrap condition; see
+      # eat-margin-fix.patch and ~/eat-margin-fix/ for the reproducer.
+      (eat.overrideAttrs (old: {
+        src = pkgs.runCommand "eat-0.9.4.tar" { } ''
+          tar xf ${old.src}
+          ( cd eat-0.9.4 && patch -p1 < ${./eat-margin-fix.patch} )
+          tar cf $out eat-0.9.4
+        '';
+      }))
       aggressive-indent
       perspective
       ein
