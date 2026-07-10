@@ -15,12 +15,11 @@ let
   loomPath = lib.makeBinPath
     (with pkgs; [ bash coreutils gnugrep gnused git openssh util-linux systemd ]);
 
-  # $mod+j — one line into the loom, then back to whatever you were doing.
-  # The menu lines are views/box: the recent weave (plus fable's pinned pane),
-  # so czar writes into visible shared context rather than a void.
+  # $mod+j — one clean line into the loom, then back to whatever you were
+  # doing. No backdrop: context lives in brain-chat; the jot stays weightless.
   brain-box = pkgs.writeShellScriptBin "brain-box" ''
     export PATH="${loomPath}:$PATH"
-    text="$(cat ${loom}/views/box 2>/dev/null | ${pkgs.bemenu}/bin/bemenu -c -i -l 16 -W 0.8 -p loom)" || exit 0
+    text="$(printf "" | ${pkgs.bemenu}/bin/bemenu -c -W 0.5 -p loom)" || exit 0
     [ -n "$text" ] || exit 0
     exec ${loom}/bin/brain-capture -s box "$text"
   '';
@@ -34,7 +33,9 @@ let
   # above, input below; lines become captures, replies weave back in.
   brain-chat = pkgs.writeShellScriptBin "brain-chat" ''
     export PATH="${loomPath}:${claude}/bin:${pkgs.ncurses}/bin:$PATH"
-    exec ${pkgs.foot}/bin/foot -a brain-chat -w 900x600 ${loom}/bin/brain-chat
+    exec ${pkgs.foot}/bin/foot -a brain-chat -w 1100x750 \
+      -o font=monospace:size=13 -o colors.alpha=1.0 \
+      ${loom}/bin/brain-chat
   '';
 
   # Heartbeat wrapper: pure shell (a git pull) when nothing is unprocessed,
