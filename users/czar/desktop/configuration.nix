@@ -374,10 +374,15 @@ let
     runtimeInputs = [ pkgs.coreutils pkgs.bemenu bgCycle bgFetch bgAdd bgSet ];
     text = ''
       # bg-menu: bemenu front-end for wallpaper control (bound to a sway key).
-      cur="$(readlink -f "$HOME/bg/sc" 2>/dev/null || echo none)"
-      raw=( "🎲 Cycle now (random from ~/bg)" "🌐 Fetch fresh (my style)" "🔍 Fetch by search…" "🖼 Pick from ~/bg…" )
-      case "$cur" in "$HOME"/bg/*) : ;; *) raw=( "➕ Add current to ~/bg" "''${raw[@]}" ) ;; esac
-      # number the entries so you can just type 1/2/3 and hit Enter
+      # Fixed order + stable numbers so 1–5 are reliable muscle memory. The
+      # save entry is always shown; bg-add is a no-op if it's already saved.
+      raw=(
+        "🎲 Cycle now (random from ~/bg)"
+        "🌐 Fetch fresh (my style)"
+        "🔍 Fetch by search…"
+        "💾 Save current to ~/bg"
+        "🖼 Pick from ~/bg…"
+      )
       opts=(); i=1
       for o in "''${raw[@]}"; do opts+=( "$i  $o" ); i=$((i + 1)); done
       choice="$(printf '%s\n' "''${opts[@]}" | bemenu -c -i -l 10 -W 0.25 -p 'wallpaper')" || exit 0
@@ -387,7 +392,7 @@ let
         *🔍*)
           term="$(bemenu -c -W 0.25 -p 'search Wallhaven:' < /dev/null)" || exit 0
           [ -n "$term" ] && exec bg-fetch "$term" ;;
-        *➕*) exec bg-add ;;
+        *💾*) exec bg-add ;;
         *🖼*)
           shopt -s nullglob; cd "$HOME/bg"
           files=(*.jpg *.jpeg *.png)
