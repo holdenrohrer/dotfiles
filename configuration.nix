@@ -75,6 +75,9 @@
       tree
     ];
     shell = pkgs.zsh;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIME8Wkm3yORpzrrWNY5UA9+gXStIlB0lawUhURHG61l0 fable"
+    ];
   };
 
   # Ensure system zsh program is enabled when zsh is the login shell
