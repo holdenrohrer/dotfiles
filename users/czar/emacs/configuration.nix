@@ -8,6 +8,7 @@
     ./ocaml.nix
     ./lean.nix
     ./go.nix
+    ./live-reload.nix
   ];
 
   # Keep an Emacs server running so emacsclient always has a socket.

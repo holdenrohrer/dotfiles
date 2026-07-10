@@ -15,12 +15,19 @@ let
   loomPath = lib.makeBinPath
     (with pkgs; [ bash coreutils gnugrep gnused git openssh util-linux systemd ]);
 
-  # $mod+l — one line into the loom, then back to whatever you were doing
+  # $mod+j — one line into the loom, then back to whatever you were doing.
+  # The menu lines are views/box: the recent weave (plus fable's pinned pane),
+  # so czar writes into visible shared context rather than a void.
   brain-box = pkgs.writeShellScriptBin "brain-box" ''
     export PATH="${loomPath}:$PATH"
-    text="$(printf "" | ${pkgs.bemenu}/bin/bemenu -c -W 0.5 -p loom)" || exit 0
+    text="$(cat ${loom}/views/box 2>/dev/null | ${pkgs.bemenu}/bin/bemenu -c -i -l 16 -W 0.8 -p loom)" || exit 0
     [ -n "$text" ] || exit 0
     exec ${loom}/bin/brain-capture -s box "$text"
+  '';
+
+  # Usage observability for the Max account feeding the local heartbeat
+  ccusage = pkgs.writeShellScriptBin "ccusage" ''
+    exec ${pkgs.nodejs}/bin/npx -y ccusage@latest "$@"
   '';
 
   # Heartbeat wrapper: pure shell (a git pull) when nothing is unprocessed,
@@ -31,7 +38,7 @@ let
   '';
 in
 {
-  home.packages = [ brain-box brain-beat ];
+  home.packages = [ brain-box brain-beat ccusage ];
 
   systemd.user.services.brain-think = {
     Unit.Description = "Loom heartbeat: fable weaves unprocessed entries";
