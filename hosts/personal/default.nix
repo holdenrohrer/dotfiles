@@ -83,6 +83,9 @@
     "hplip"
     "steam"
     "steam-unwrapped"
+    # Anthropic's CLI, pulled in by claude-agent-acp (the Claude ACP shim).
+    "claude-code"
+    "claude-agent-acp"
   ];
   nixpkgs.config.permittedInsecurePackages = [
     "mbedtls-2.28.10"
@@ -103,6 +106,18 @@
   };
 
   services.tailscale.enable = true;
+
+  # SSH is only reachable over Tailscale: openFirewall = false keeps port 22
+  # out of the global firewall, and we open it solely on the tailscale0 iface.
+  services.openssh = {
+    enable = true;
+    openFirewall = false;
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = "no";
+    };
+  };
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 22 ];
 
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 1234 53317 ];
