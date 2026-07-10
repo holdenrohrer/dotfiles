@@ -13,7 +13,7 @@ let
 
   loom = "${config.home.homeDirectory}/brain";
   loomPath = lib.makeBinPath
-    (with pkgs; [ coreutils gnugrep gnused git openssh util-linux systemd ]);
+    (with pkgs; [ bash coreutils gnugrep gnused git openssh util-linux systemd ]);
 
   # $mod+l — one line into the loom, then back to whatever you were doing
   brain-box = pkgs.writeShellScriptBin "brain-box" ''
