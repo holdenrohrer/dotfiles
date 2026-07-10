@@ -318,15 +318,42 @@ let
     name = "bg-fetch";
     runtimeInputs = [ pkgs.curl pkgs.jq pkgs.coreutils bgSet ];
     text = ''
-      # bg-fetch: download a random >=1920x1200 SFW Wallhaven image and set it.
+      # bg-fetch [query]: download an on-style >=1920x1200 SFW wallpaper from
+      # Wallhaven and set it. With no arg, picks a random search from the taste
+      # profile below. Sorts by all-time favorites (curated quality, not the
+      # random-junk slot machine) and picks a random image from a random early
+      # page for variety.
       cache="$HOME/.cache/wallpaper"; mkdir -p "$cache"
-      q="sorting=random&atleast=1920x1200&purity=100&categories=100"
-      json="$(curl -sS --max-time 20 "https://wallhaven.cc/api/v1/search?$q")"
-      url="$(jq -r '.data[0].path' <<<"$json")"
-      id="$(jq -r '.data[0].id' <<<"$json")"
-      { [ -n "$url" ] && [ "$url" != null ]; } || { echo "bg-fetch: no result from Wallhaven" >&2; exit 1; }
+
+      # Taste profile — Holden's vibes. Edit freely (rebuild only, no reload).
+      tastes=(
+        nature landscape mountains forest waterfall ocean desert
+        animals wildlife birds cat
+        pattern geometric psychedelic fractal trippy kaleidoscope
+        crowd festival concert
+        planet space nebula galaxy aurora moon
+        macos abstract gradient minimal
+      )
+      q="''${1:-''${tastes[RANDOM % ''${#tastes[@]}]}}"
+      enc="$(printf '%s' "$q" | jq -sRr @uri)"
+      base="https://wallhaven.cc/api/v1/search?q=$enc&sorting=favorites&atleast=1920x1200&purity=100&categories=101"
+
+      # random early page for variety; fall back to page 1 for thin tags
+      page=$(( (RANDOM % 3) + 1 ))
+      json="$(curl -sS --max-time 20 "$base&page=$page")"
+      count="$(jq -r '.data | length' <<<"$json")"
+      if [ "$count" -eq 0 ]; then
+        json="$(curl -sS --max-time 20 "$base&page=1")"
+        count="$(jq -r '.data | length' <<<"$json")"
+      fi
+      [ "$count" -gt 0 ] || { echo "bg-fetch: no results for '$q'" >&2; exit 1; }
+
+      idx=$(( RANDOM % count ))
+      url="$(jq -r ".data[$idx].path" <<<"$json")"
+      id="$(jq -r ".data[$idx].id" <<<"$json")"
       out="$cache/wallhaven-$id.''${url##*.}"
       curl -sS --max-time 60 -o "$out" "$url"
+      echo "bg-fetch: '$q' -> $id"
       exec bg-set "$out"
     '';
   };
@@ -348,7 +375,7 @@ let
     text = ''
       # bg-menu: bemenu front-end for wallpaper control (bound to a sway key).
       cur="$(readlink -f "$HOME/bg/sc" 2>/dev/null || echo none)"
-      raw=( "🎲 Cycle now (random from ~/bg)" "🌐 Fetch fresh (Wallhaven)" "🖼 Pick from ~/bg…" )
+      raw=( "🎲 Cycle now (random from ~/bg)" "🌐 Fetch fresh (my style)" "🔍 Fetch by search…" "🖼 Pick from ~/bg…" )
       case "$cur" in "$HOME"/bg/*) : ;; *) raw=( "➕ Add current to ~/bg" "''${raw[@]}" ) ;; esac
       # number the entries so you can just type 1/2/3 and hit Enter
       opts=(); i=1
@@ -357,6 +384,9 @@ let
       case "$choice" in
         *🎲*) exec bg-cycle ;;
         *🌐*) exec bg-fetch ;;
+        *🔍*)
+          term="$(bemenu -c -W 0.25 -p 'search Wallhaven:' < /dev/null)" || exit 0
+          [ -n "$term" ] && exec bg-fetch "$term" ;;
         *➕*) exec bg-add ;;
         *🖼*)
           shopt -s nullglob; cd "$HOME/bg"
