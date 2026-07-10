@@ -49,9 +49,14 @@
     retentionDays = null;
   };
 
+  # Self-hosted tailnet (headscale @ vpn.hrhr.dev); `tailscale up` run once
+  # imperatively with a preauth key — state persists in /var/lib/tailscale.
+  services.tailscale.enable = true;
+
   environment.persistence."/persist".directories = [
     "/etc/ssh"
     "/var/lib/docker"
+    "/var/lib/tailscale"
   ];
 
   virtualisation.docker.enable = true;
