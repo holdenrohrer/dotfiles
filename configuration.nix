@@ -117,6 +117,12 @@
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     trusted-users = [ "root" "czar" ];
+    # Keep builds from eating the whole machine: at most 3 derivations at
+    # once, 2 build-threads each -> ~6 cores. This is the cap that actually
+    # bounds `sudo nixos-rebuild` (root builds directly, bypassing the
+    # daemon), so it must live here rather than only in a cgroup quota.
+    cores = 2;
+    max-jobs = 3;
     substituters = [
       "https://cache.nixos.org"
       "https://cuda-maintainers.cachix.org"
@@ -139,6 +145,12 @@
     dates = [ "daily" ];
     persistent = true;
   };
+
+  # Belt-and-suspenders hard cap for *daemon-driven* builds (non-root nix,
+  # auto-gc, nix-index): everything the daemon spawns lives in this cgroup.
+  # Note: `sudo nixos-rebuild` builds as root outside the daemon, so it is
+  # bounded by nix.settings.cores/max-jobs above, not by this quota.
+  systemd.services.nix-daemon.serviceConfig.CPUQuota = "600%";
 
   system.stateVersion = "25.05";
 }
