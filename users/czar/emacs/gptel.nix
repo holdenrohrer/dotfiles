@@ -7,8 +7,12 @@
       let
         gptel = melpaBuild {
           pname = "gptel";
-          version = "20251010";
+          version = "20260530";
           src = inputs.gptel-src;
+          # Without explicit deps, melpaBuild byte-compiles against Emacs's
+          # builtin transient (0.7.x), which lacks the :environment slot that
+          # current gptel uses — so it must pull the package-set transient.
+          packageRequires = with epkgs; [ transient compat ];
         };
 
         gptelMagit = melpaBuild {
@@ -44,6 +48,14 @@
         (setq gptel-model 'openai/gpt-5)
 
         (setq gptel-default-mode 'org-mode)
+
+        ;; Codex / ChatGPT subscription backend via gptel's native OAuth.
+        ;; No API key: talks to chatgpt.com/backend-api/codex/responses using
+        ;; the sub. One-time device-flow login: M-x gptel-openai-oauth-login
+        ;; (token cached under <user-emacs-directory>/.cache/gptel-openai/).
+        (require 'gptel-openai-oauth)
+        (gptel-make-openai-oauth "Codex-sub"
+          :models '(gpt-5.5 gpt-5.4 gpt-5.4-mini gpt-5.3-codex))
 
         ;; Groq Kimi2 preset - forces Groq provider
         (gptel-make-openai "Groq Kimi2"

@@ -75,6 +75,9 @@ in {
           ".claude"
           ".codex"
           ".config/gh"
+          # gptel's ChatGPT/Codex OAuth device-flow token, so the login
+          # survives the boot-time root wipe instead of re-authing each boot.
+          ".emacs.d/.cache/gptel-openai"
         ];
         files = [
           ".claude.json"
