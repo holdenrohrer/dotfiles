@@ -4,6 +4,7 @@
   imports = [
     ./sudoedit.nix
     ./gptel.nix
+    ./agent-shell.nix
     ./haskell.nix
     ./ocaml.nix
     ./lean.nix
