@@ -13,6 +13,20 @@
     })
   ];
 
+  # Unfree packages allowed on every host. A name here is only consulted when
+  # that package actually enters a host's closure, so listing all of them in
+  # one shared place is inert on hosts that never reference them (e.g. steam
+  # on work). claude-code/claude-agent-acp are pulled in by the emacs
+  # agent-shell (shared), so they must be allowed on both hosts.
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+    "hplip"
+    "steam"
+    "steam-unwrapped"
+    # Anthropic's CLI, pulled in by claude-agent-acp (the Claude ACP shim).
+    "claude-code"
+    "claude-agent-acp"
+  ];
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

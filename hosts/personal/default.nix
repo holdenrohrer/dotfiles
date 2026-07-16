@@ -78,15 +78,8 @@
   # 32-bit graphics for games (SPORE on WINE, Lutris)
   hardware.graphics.enable32Bit = true;
 
-  # Unfree packages needed on personal machine
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-    "hplip"
-    "steam"
-    "steam-unwrapped"
-    # Anthropic's CLI, pulled in by claude-agent-acp (the Claude ACP shim).
-    "claude-code"
-    "claude-agent-acp"
-  ];
+  # allowUnfreePredicate lives in the shared configuration.nix (inert on hosts
+  # that don't reference a given package).
   nixpkgs.config.permittedInsecurePackages = [
     "mbedtls-2.28.10"
   ];
