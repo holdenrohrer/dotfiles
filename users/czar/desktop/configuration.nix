@@ -367,6 +367,25 @@ let
     text = ''exec bemenu-run -c -i -l 10 -W 0.3 "$@"'';
   };
 
+  # $mod+f: send the focused window to a fresh empty workspace and follow it.
+  # Replaces `fullscreen toggle` — fullscreening a grabbing Xwayland window
+  # (ssh-askpass et al.) wedged keyboard input. Target = lowest positive
+  # workspace number that doesn't yet exist, so it's guaranteed empty.
+  boomToEmpty = pkgs.writeShellApplication {
+    name = "boom-to-empty";
+    runtimeInputs = [ pkgs.sway pkgs.jq pkgs.coreutils pkgs.findutils ];
+    text = ''
+      SWAYSOCK="''${SWAYSOCK:-$(find /run/user/"$(id -u)" -maxdepth 1 -name 'sway-ipc.*.sock' -print -quit 2>/dev/null)}"
+      export SWAYSOCK
+      used="$(swaymsg -t get_workspaces | jq '[.[].num] | map(select(. > 0))')"
+      n=1
+      while jq -e --argjson n "$n" 'index($n) != null' <<<"$used" >/dev/null; do
+        n=$((n + 1))
+      done
+      swaymsg "move container to workspace number $n; workspace number $n" >/dev/null
+    '';
+  };
+
   bgMenu = pkgs.writeShellApplication {
     name = "bg-menu";
     # bemenu (Wayland-native, centered via -c) — plain dmenu is X11 and can't
@@ -515,6 +534,7 @@ in
     openUrl
     bgMenu    # $mod+Shift+w — on PATH so the keybind is a stable bare name
     menuRun   # $mod+space   — ditto (keeps sway.config static → no reloads)
+    boomToEmpty # $mod+f     — ditto
     feh
     anki
     signal-desktop
