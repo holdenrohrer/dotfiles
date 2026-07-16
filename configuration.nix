@@ -33,6 +33,12 @@
   # Xwayland support
   services.xserver.enable = true;
 
+  # Enabling X flips on programs.ssh.enableAskPassword, which otherwise
+  # defaults SSH_ASKPASS to legacy x11-ssh-askpass — an Xwayland window that
+  # X-grabs the keyboard and wedges input under sway. Use wayprompt instead:
+  # native wlroots, self-contained, same prompt tool as our GPG pinentry.
+  programs.ssh.askPassword = "${pkgs.wayprompt}/bin/wayprompt-ssh-askpass";
+
   # Use uwsm to properly manage Wayland session lifecycle
   # (environment import to systemd, graphical-session.target, clean shutdown)
   programs.uwsm = {
