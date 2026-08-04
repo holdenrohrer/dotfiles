@@ -283,18 +283,48 @@ let
     name = "bg-cycle";
     runtimeInputs = [ pkgs.coreutils bgSet ];
     text = ''
-      # bg-cycle: pick a random image from ~/bg (avoiding the current one).
+      # bg-cycle: pick a random image from ~/bg, avoiding the last N shown.
+      # History of resolved paths lives in ~/bg/.recent (newest last). N
+      # defaults to half the collection (override with BG_AVOID_N), capped at
+      # count-1 so there is always at least one candidate to choose from.
       shopt -s nullglob
       imgs=("$HOME"/bg/*.jpg "$HOME"/bg/*.jpeg "$HOME"/bg/*.png)
-      [ "''${#imgs[@]}" -gt 0 ] || { echo "bg-cycle: no images in ~/bg" >&2; exit 1; }
+      count="''${#imgs[@]}"
+      [ "$count" -gt 0 ] || { echo "bg-cycle: no images in ~/bg" >&2; exit 1; }
+
+      recent="$HOME/bg/.recent"
+      n="''${BG_AVOID_N:-$(( count / 2 ))}"
+      [ "$n" -lt 1 ] && n=1
+      [ "$n" -gt "$(( count - 1 ))" ] && n=$(( count - 1 ))
+
+      # Set of paths to avoid: the last N shown plus the current wallpaper.
+      declare -A avoid=()
+      if [ -f "$recent" ]; then
+        while IFS= read -r line; do [ -n "$line" ] && avoid["$line"]=1; done < "$recent"
+      fi
       cur="$(readlink -f "$HOME/bg/sc" 2>/dev/null || true)"
-      pick="''${imgs[RANDOM % ''${#imgs[@]}]}"
-      if [ "''${#imgs[@]}" -gt 1 ]; then
-        tries=0
-        while [ "$(readlink -f "$pick")" = "$cur" ] && [ "$tries" -lt 10 ]; do
-          pick="''${imgs[RANDOM % ''${#imgs[@]}]}"; tries=$((tries + 1))
+      [ -n "$cur" ] && avoid["$cur"]=1
+
+      # Candidates = images not in the avoid set; fall back to "anything but
+      # the current one" if the history somehow swallowed everything.
+      candidates=()
+      for f in "''${imgs[@]}"; do
+        rf="$(readlink -f "$f")"
+        [ -z "''${avoid[$rf]:-}" ] && candidates+=("$f")
+      done
+      if [ "''${#candidates[@]}" -eq 0 ]; then
+        for f in "''${imgs[@]}"; do
+          [ "$(readlink -f "$f")" != "$cur" ] && candidates+=("$f")
         done
       fi
+      [ "''${#candidates[@]}" -gt 0 ] || candidates=("''${imgs[@]}")
+
+      pick="''${candidates[RANDOM % ''${#candidates[@]}]}"
+
+      # Record the pick and keep only the last N entries of history.
+      { [ -f "$recent" ] && cat "$recent"; readlink -f "$pick"; } \
+        | tail -n "$n" > "$recent.tmp" && mv "$recent.tmp" "$recent"
+
       exec bg-set "$pick"
     '';
   };
