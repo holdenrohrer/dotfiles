@@ -31,6 +31,7 @@
       just
       inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
       pkgs.unstable.codex
+      (pkgs.callPackage ./packages/omp { }) # oh-my-pi terminal AI coding agent
       socat # necessary for claude-code sandbox
       bubblewrap # necessary for claude-code sandbox
       nodejs # for claude-code MCP server
