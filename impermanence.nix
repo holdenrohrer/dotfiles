@@ -74,6 +74,9 @@ in {
           ".cache/nix-index"
           ".claude"
           ".codex"
+          # omp (oh-my-pi): Codex OAuth token + agent.db/config.yml (default model
+          # role), so the login and config survive the boot-time root wipe.
+          ".omp"
           ".config/gh"
           # gptel's ChatGPT/Codex OAuth device-flow token, so the login
           # survives the boot-time root wipe instead of re-authing each boot.

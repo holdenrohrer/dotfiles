@@ -20,6 +20,10 @@
       EDITOR = "emacsclient -r -a emacs";
       VISUAL = "emacsclient -r -a emacs";
       TERMINAL = "emacsclient -c -a emacs";
+      # omp (oh-my-pi) smol role. omp has no env hook for the *default* model
+      # (that lives in ~/.omp/agent/config.yml, kept durable via impermanence),
+      # but PI_SMOL_MODEL declaratively pins the lightweight-task model.
+      PI_SMOL_MODEL = "openai-codex/gpt-5.6-luna";
     };
     packages = with pkgs; [
       git
