@@ -3,17 +3,35 @@
 ;; ---------------------------------------------------------------------
 ;; The cascade (~/cascade): the current moment at every scale.
 ;;
-;; Machines may rewrite ONLY the Inbox subtree (the mail slot) and copy
-;; sections into archive/ (a camera, not a broom). Everything else in
-;; cascade.org is czar's alone. Systemd timers (users/czar/cascade) call
-;; the czar/cascade-* entry points through emacsclient, so the whole
-;; system lives in the editor and reloads live with the rest of init.el.
+;; cascade.org is czar's alone — machines NEVER write it. Machines may
+;; write exactly two places: inbox.org (the doorstep: tickets + chatter,
+;; linked from cascade.org, gitignored) and archive/ copies (a camera,
+;; not a broom). Systemd timers (users/czar/cascade) call the
+;; czar/cascade-* entry points through emacsclient, so the whole system
+;; lives in the editor and reloads live with the rest of init.el.
 ;;
-;; The inbox refreshes silently — it is reviewed at the start of the
-;; day, not pushed. The only notification is the 08:00 glance.
+;; The doorstep refreshes silently — reviewed at the start of the day,
+;; not pushed. The only notification is the 08:00 glance.
 
 (defconst czar/cascade-file (expand-file-name "~/cascade/cascade.org"))
+(defconst czar/cascade-inbox-file (expand-file-name "~/cascade/inbox.org"))
 (defconst czar/cascade-dir (expand-file-name "~/cascade/"))
+(defconst czar/cascade-state-dir
+  (expand-file-name "cascade/"
+                    (or (getenv "XDG_STATE_HOME") "~/.local/state/")))
+
+(defun czar/cascade--state-ids (name)
+  (let ((f (expand-file-name name czar/cascade-state-dir)))
+    (when (file-exists-p f)
+      (split-string (with-temp-buffer (insert-file-contents f)
+                                      (buffer-string))
+                    "\n" t))))
+
+(defun czar/cascade--write-state-ids (name ids)
+  (make-directory czar/cascade-state-dir t)
+  (write-region (concat (string-join ids "\n") "\n") nil
+                (expand-file-name name czar/cascade-state-dir)
+                nil 'quiet))
 
 (defun czar/cascade ()
   "Jump to the cascade."
@@ -63,14 +81,13 @@
      (if lines (string-join lines "\n")
        "(Today is empty — open the cascade)"))))
 
-;; --- inbox: the mail slot --------------------------------------------
+;; --- doorstep: inbox.org ---------------------------------------------
 
 (defconst czar/cascade--ticket-soql
   (concat "SELECT Id, Name, Subject__c, Status__c, Priority_Level__c,"
           " Date_Requested_By__c FROM Syncx_Assist__c"
           " WHERE Assigned_to__r.Username = 'hrohrer@hellosyncx.com'"
-          " AND Status__c NOT IN ('Resolved', 'Cancelled')"
-          " ORDER BY Date_Requested_By__c NULLS LAST, Name"))
+          " AND Status__c NOT IN ('Resolved', 'Cancelled')"))
 
 (defun czar/cascade--sf (soql)
   "Run SOQL against prod via the sf CLI; return the records as a list."
@@ -95,25 +112,29 @@
     (string-trim (replace-regexp-in-string "[ \t\n\r]+" " " s))))
 
 (defun czar/cascade--chatter-entries (records body-key names)
-  "RECORDS with non-null BODY-KEY as (id ts line); NAMES maps Id to SA."
+  "RECORDS with non-null BODY-KEY as (tag ts line); NAMES maps Id to SA.
+The trailing ⟨tag⟩ is the feed id's tail — the stable identity that
+delete-to-dismiss tracks."
   (delq nil
         (mapcar
          (lambda (r)
            (let ((body (gethash body-key r)))
              (unless (or (null body) (eq body :null))
-               (list (gethash "Id" r)
-                     (gethash "CreatedDate" r)
-                     (format "- %s %s @ %s :: %s"
-                             (substring (gethash "CreatedDate" r) 0 10)
-                             (gethash "Name" (gethash "CreatedBy" r))
-                             (gethash (gethash "ParentId" r) names
-                                      (gethash "ParentId" r))
-                             (truncate-string-to-width
-                              (czar/cascade--html->text body) 120))))))
+               (let ((tag (substring (gethash "Id" r) -6)))
+                 (list tag
+                       (gethash "CreatedDate" r)
+                       (format "- %s %s @ %s :: %s ⟨%s⟩"
+                               (substring (gethash "CreatedDate" r) 0 10)
+                               (gethash "Name" (gethash "CreatedBy" r))
+                               (gethash (gethash "ParentId" r) names
+                                        (gethash "ParentId" r))
+                               (truncate-string-to-width
+                                (czar/cascade--html->text body) 120)
+                               tag))))))
          records)))
 
 (defun czar/cascade--chatter (ids names)
-  "Chatter (posts + comments, 14d) on ticket IDS as (id ts line), newest first.
+  "Chatter (posts + comments, 14d) on ticket IDS as (tag ts line), newest first.
 NAMES maps ticket Id to SA number."
   (when ids
     (let* ((idlist (mapconcat (lambda (i) (format "'%s'" i)) ids ", "))
@@ -125,42 +146,75 @@ NAMES maps ticket Id to SA number."
                    (czar/cascade--chatter-entries comments "CommentBody" names))
             (lambda (a b) (string> (cadr a) (cadr b)))))))
 
-(defun czar/cascade--replace-inbox (text)
-  "Swap the Inbox subtree body for TEXT.
-Edits the live buffer when cascade.org is open — if czar has unsaved
-edits they are preserved and nothing is saved (their next save carries
-the refresh); an unmodified or unvisited file is saved quietly."
-  (let* ((visiting (find-buffer-visiting czar/cascade-file))
-         (buf (or visiting (find-file-noselect czar/cascade-file))))
-    (with-current-buffer buf
-      (save-excursion
-        (let ((was-modified (buffer-modified-p)))
-          (goto-char (point-min))
-          (unless (re-search-forward "^\\* Inbox" nil t)
-            (error "cascade.org has no * Inbox heading"))
-          (forward-line 1)
-          (let* ((beg (point))
-                 (end (if (re-search-forward "^\\* " nil t)
-                          (match-beginning 0)
-                        (point-max))))
-            (delete-region beg end)
-            (goto-char beg)
-            (insert (string-trim-right text) "\n\n"))
-          (unless was-modified
-            (let ((inhibit-message t)) (save-buffer))))))
-    (unless visiting (kill-buffer buf))))
+(defun czar/cascade--tags-in (text)
+  "All ⟨tag⟩ markers in TEXT (nil-safe)."
+  (let (tags (start 0))
+    (while (and text (string-match "⟨\\([A-Za-z0-9]+\\)⟩" text start))
+      (push (match-string 1 text) tags)
+      (setq start (match-end 0)))
+    tags))
+
+(defun czar/cascade--doorstep-content ()
+  "Current inbox.org content, preferring an open buffer (unsaved
+deletions are dismissal signals — harvest them before overwriting)."
+  (let ((visiting (find-buffer-visiting czar/cascade-inbox-file)))
+    (cond (visiting (with-current-buffer visiting
+                      (buffer-substring-no-properties (point-min)
+                                                      (point-max))))
+          ((file-exists-p czar/cascade-inbox-file)
+           (with-temp-buffer
+             (insert-file-contents czar/cascade-inbox-file)
+             (buffer-string))))))
+
+(defun czar/cascade--swap-doorstep (text)
+  "Overwrite inbox.org with TEXT, through the buffer if czar has it open."
+  (let ((visiting (find-buffer-visiting czar/cascade-inbox-file)))
+    (if visiting
+        (with-current-buffer visiting
+          (save-excursion
+            (erase-buffer)
+            (insert text))
+          (let ((inhibit-message t)) (save-buffer)))
+      (write-region text nil czar/cascade-inbox-file nil 'quiet))))
+
+(defconst czar/cascade--priority-rank
+  '(("Critical/Fire" . 0) ("High" . 1) ("Medium" . 2) ("Low" . 3)))
+
+(defun czar/cascade--ticket-key (r)
+  "Sort key: priority, then due date (nulls last), then SA number."
+  (format "%d %s %s"
+          (alist-get (czar/cascade--f r "Priority_Level__c")
+                     czar/cascade--priority-rank 9 nil #'equal)
+          (czar/cascade--f r "Date_Requested_By__c" "9999-99-99")
+          (gethash "Name" r)))
 
 (defun czar/cascade-inbox-refresh ()
-  "Silently refresh the Inbox mail slot: assigned tickets + chatter.
-Rewrites ONLY the Inbox subtree. No notifications — the slot is
-reviewed at the start of the day, not pushed."
+  "Silently refresh the doorstep (inbox.org): assigned tickets + chatter.
+Machines write ONLY this file (and archive/), never cascade.org.
+Tickets sort by priority then due date. Chatter is delete-to-dismiss:
+a line czar deletes is recorded in state and never resurrected."
   (interactive)
-  (let* ((tickets (czar/cascade--sf czar/cascade--ticket-soql))
+  (let* ((tickets (sort (czar/cascade--sf czar/cascade--ticket-soql)
+                        (lambda (a b)
+                          (string< (czar/cascade--ticket-key a)
+                                   (czar/cascade--ticket-key b)))))
          (names (make-hash-table :test #'equal)))
     (dolist (r tickets)
       (puthash (gethash "Id" r) (gethash "Name" r) names))
     (let* ((chatter (czar/cascade--chatter
                      (mapcar (lambda (r) (gethash "Id" r)) tickets) names))
+           ;; delete-to-dismiss: tags shown last time but now absent from
+           ;; the doorstep were deleted by czar — never show them again.
+           (present (czar/cascade--tags-in (czar/cascade--doorstep-content)))
+           (newly (seq-remove (lambda (tag) (member tag present))
+                              (czar/cascade--state-ids "chatter-shown")))
+           (dismissed (seq-filter          ; prune to the live 14d window
+                       (lambda (tag) (assoc tag chatter))
+                       (seq-uniq (append (czar/cascade--state-ids
+                                          "chatter-dismissed")
+                                         newly))))
+           (visible (seq-remove (lambda (c) (member (car c) dismissed))
+                                chatter))
            (ticket-lines
             (mapcar (lambda (r)
                       (format "** %s :: %s  [%s / %s / due %s]"
@@ -170,16 +224,19 @@ reviewed at the start of the day, not pushed."
                               (czar/cascade--f r "Priority_Level__c")
                               (czar/cascade--f r "Date_Requested_By__c")))
                     tickets)))
-      (czar/cascade--replace-inbox
+      (czar/cascade--swap-doorstep
        (concat
-        "Machine-refreshed mail slot — the only subtree machines may"
-        " write. Pull items in by hand.\n"
-        "refreshed: " (format-time-string "%F %R") "\n\n"
-        "** chatter (14d)\n"
-        (if chatter
-            (string-join (mapcar #'caddr chatter) "\n")
-          "- (silence)")
-        "\n\n" (string-join ticket-lines "\n")))
+        "# doorstep — the only file machines write; linked from cascade.org\n"
+        "# review at day start · delete a chatter line to dismiss it forever\n"
+        "# refreshed: " (format-time-string "%F %R") "\n\n"
+        "* chatter (14d, delete-to-dismiss)\n"
+        (if visible
+            (string-join (mapcar #'caddr visible) "\n")
+          "- (inbox zero ✓)")
+        "\n\n* tickets — by priority, then due\n"
+        (string-join ticket-lines "\n") "\n"))
+      (czar/cascade--write-state-ids "chatter-shown" (mapcar #'car visible))
+      (czar/cascade--write-state-ids "chatter-dismissed" dismissed)
       (length tickets))))
 
 ;; --- snapshot: the camera --------------------------------------------
@@ -243,6 +300,25 @@ Deadlines, Inbox, Today) are standing and never snapshot."
                 (unless (file-exists-p out)
                   (write-region beg end out nil 'quiet)))))
           (goto-char end))))))
+
+;; --- commit: the daily unsigned snapshot ------------------------------
+
+(defun czar/cascade--git (&rest args)
+  (with-temp-buffer
+    (cons (apply #'call-process "git" nil t nil "-C" czar/cascade-dir args)
+          (string-trim (buffer-string)))))
+
+(defun czar/cascade-commit ()
+  "Daily auto-commit of the cascade, unsigned — signed commits remain
+the mark of a human ritual. Push is best-effort: a failure waits in the
+journal for tomorrow."
+  (interactive)
+  (czar/cascade--git "add" "-A")
+  (unless (zerop (car (czar/cascade--git "diff-index" "--quiet"
+                                         "--cached" "HEAD")))
+    (czar/cascade--git "commit" "--no-gpg-sign" "-m"
+                       (concat "auto: " (format-time-string "%F"))))
+  (czar/cascade--git "push"))
 
 (global-set-key (kbd "C-c c") #'czar/cascade)
 

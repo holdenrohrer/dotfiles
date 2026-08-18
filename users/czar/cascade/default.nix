@@ -49,16 +49,22 @@ let
     "Mon..Fri 07:55";
   snapshot = poke "cascade: cadence-boundary archive snapshot" "czar/cascade-snapshot"
     "07:30";
+  # Unsigned machine snapshot commits; signed commits remain the mark of
+  # a human ritual. Push is best-effort (journal on failure).
+  commit = poke "cascade: daily unsigned auto-commit and push" "czar/cascade-commit"
+    "Mon..Fri 17:30";
 in
 {
   systemd.user.services = {
     cascade-glance = glance.service;
     cascade-inbox = inbox.service;
     cascade-snapshot = snapshot.service;
+    cascade-commit = commit.service;
   };
   systemd.user.timers = {
     cascade-glance = glance.timer;
     cascade-inbox = inbox.timer;
     cascade-snapshot = snapshot.timer;
+    cascade-commit = commit.timer;
   };
 }
