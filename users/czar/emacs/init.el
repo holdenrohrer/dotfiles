@@ -1,11 +1,278 @@
 ;; Avoid (require) and stick to (use-package)
 
-;; Open ticket.org by default on work machine
-(when (string= (system-name) "work")
-  (setq initial-buffer-choice "~/projects/ticket.org"))
+;; ---------------------------------------------------------------------
+;; The cascade (~/cascade): the current moment at every scale.
+;;
+;; Machines may rewrite ONLY the Inbox subtree (the mail slot) and copy
+;; sections into archive/ (a camera, not a broom). Everything else in
+;; cascade.org is czar's alone. Systemd timers (users/czar/cascade) call
+;; the czar/cascade-* entry points through emacsclient, so the whole
+;; system lives in the editor and reloads live with the rest of init.el.
 
-;; Org-mode
-(setq org-agenda-files '("~/projects/ticket.org"))
+(defconst czar/cascade-file (expand-file-name "~/cascade/cascade.org"))
+(defconst czar/cascade-dir (expand-file-name "~/cascade/"))
+(defconst czar/cascade-state-dir
+  (expand-file-name "cascade/"
+                    (or (getenv "XDG_STATE_HOME") "~/.local/state/")))
+
+(defun czar/cascade ()
+  "Jump to the cascade."
+  (interactive)
+  (find-file czar/cascade-file))
+
+(defun czar/cascade-pop ()
+  "Open the cascade in a fresh graphical frame, focused."
+  (interactive)
+  (select-frame-set-input-focus (make-frame))
+  (find-file czar/cascade-file))
+
+(defun czar/cascade--on-notify-action (_id _key)
+  (czar/cascade-pop))
+
+(defun czar/cascade--notify (title body)
+  "Desktop-notify TITLE/BODY; clicking the notification opens the cascade."
+  (require 'notifications)
+  (when (and body (not (string-blank-p body)))
+    (notifications-notify :app-name "cascade" :title title :body body
+                          :actions '("default" "open cascade")
+                          :on-action #'czar/cascade--on-notify-action)))
+
+(defun czar/cascade--subtree (heading)
+  "Top-level HEADING line plus body, from the cascade file on disk."
+  (with-temp-buffer
+    (insert-file-contents czar/cascade-file)
+    (goto-char (point-min))
+    (when (re-search-forward (format "^\\* %s" (regexp-quote heading)) nil t)
+      (let ((beg (match-beginning 0)))
+        (forward-line 1)
+        (buffer-substring-no-properties
+         beg (if (re-search-forward "^\\* " nil t) (match-beginning 0)
+               (point-max)))))))
+
+;; --- glance: the 08:00 knock -----------------------------------------
+
+(defun czar/cascade-glance ()
+  "Notify the Today section — the day's one scheduled glance."
+  (interactive)
+  (let* ((sub (or (czar/cascade--subtree "Today") ""))
+         (lines (seq-take (seq-remove #'string-blank-p
+                                      (cdr (split-string sub "\n")))
+                          8)))
+    (czar/cascade--notify
+     "cascade — today"
+     (if lines (string-join lines "\n")
+       "(Today is empty — open the cascade)"))))
+
+;; --- inbox: the mail slot --------------------------------------------
+
+(defconst czar/cascade--ticket-soql
+  (concat "SELECT Id, Name, Subject__c, Status__c, Priority_Level__c,"
+          " Date_Requested_By__c FROM Syncx_Assist__c"
+          " WHERE Assigned_to__r.Username = 'hrohrer@hellosyncx.com'"
+          " AND Status__c NOT IN ('Resolved', 'Cancelled')"
+          " ORDER BY Date_Requested_By__c NULLS LAST, Name"))
+
+(defun czar/cascade--sf (soql)
+  "Run SOQL against prod via the sf CLI; return the records as a list."
+  (with-temp-buffer
+    (let ((code (call-process "sf" nil (list t nil) nil
+                              "data" "query" "-o" "prod" "--json" "-q" soql)))
+      (unless (eql code 0)
+        (error "sf exited %s: %.400s" code (buffer-string))))
+    (goto-char (point-min))
+    (append (gethash "records" (gethash "result" (json-parse-buffer))) nil)))
+
+(defun czar/cascade--f (r key &optional dflt)
+  "Field KEY of record R, with DFLT for SOQL nulls."
+  (let ((v (gethash key r)))
+    (if (or (null v) (eq v :null)) (or dflt "-") v)))
+
+(defun czar/cascade--html->text (s)
+  (let ((s (replace-regexp-in-string "<[^>]*>" " " s)))
+    (dolist (pair '(("&#39;" . "'") ("&quot;" . "\"") ("&amp;" . "&")
+                    ("&gt;" . ">") ("&lt;" . "<") ("&nbsp;" . " ")))
+      (setq s (string-replace (car pair) (cdr pair) s)))
+    (string-trim (replace-regexp-in-string "[ \t\n\r]+" " " s))))
+
+(defun czar/cascade--chatter-entries (records body-key names)
+  "RECORDS with non-null BODY-KEY as (id ts line); NAMES maps Id to SA."
+  (delq nil
+        (mapcar
+         (lambda (r)
+           (let ((body (gethash body-key r)))
+             (unless (or (null body) (eq body :null))
+               (list (gethash "Id" r)
+                     (gethash "CreatedDate" r)
+                     (format "- %s %s @ %s :: %s"
+                             (substring (gethash "CreatedDate" r) 0 10)
+                             (gethash "Name" (gethash "CreatedBy" r))
+                             (gethash (gethash "ParentId" r) names
+                                      (gethash "ParentId" r))
+                             (truncate-string-to-width
+                              (czar/cascade--html->text body) 120))))))
+         records)))
+
+(defun czar/cascade--chatter (ids names)
+  "Chatter (posts + comments, 14d) on ticket IDS as (id ts line), newest first.
+NAMES maps ticket Id to SA number."
+  (when ids
+    (let* ((idlist (mapconcat (lambda (i) (format "'%s'" i)) ids ", "))
+           (posts (czar/cascade--sf
+                   (format "SELECT Id, ParentId, CreatedBy.Name, Body, CreatedDate FROM FeedItem WHERE ParentId IN (%s) AND CreatedDate = LAST_N_DAYS:14 ORDER BY CreatedDate DESC LIMIT 100" idlist)))
+           (comments (czar/cascade--sf
+                      (format "SELECT Id, ParentId, CreatedBy.Name, CommentBody, CreatedDate FROM FeedComment WHERE ParentId IN (%s) AND CreatedDate = LAST_N_DAYS:14 ORDER BY CreatedDate DESC LIMIT 100" idlist))))
+      (sort (nconc (czar/cascade--chatter-entries posts "Body" names)
+                   (czar/cascade--chatter-entries comments "CommentBody" names))
+            (lambda (a b) (string> (cadr a) (cadr b)))))))
+
+(defun czar/cascade--inbox-statuses (text)
+  "(SA . status) pairs parsed from inbox TEXT (nil-safe)."
+  (let (res (start 0))
+    (while (and text
+                (string-match "^\\*+ \\(SA-[0-9]+\\) :: .*\\[\\([^/]+?\\) /"
+                              text start))
+      (push (cons (match-string 1 text) (match-string 2 text)) res)
+      (setq start (match-end 0)))
+    (nreverse res)))
+
+(defun czar/cascade--replace-inbox (text)
+  "Swap the Inbox subtree body for TEXT; return the old body.
+Edits the live buffer when cascade.org is open — if czar has unsaved
+edits they are preserved and nothing is saved (their next save carries
+the refresh); an unmodified or unvisited file is saved quietly."
+  (let* ((visiting (find-buffer-visiting czar/cascade-file))
+         (buf (or visiting (find-file-noselect czar/cascade-file)))
+         old)
+    (with-current-buffer buf
+      (save-excursion
+        (let ((was-modified (buffer-modified-p)))
+          (goto-char (point-min))
+          (unless (re-search-forward "^\\* Inbox" nil t)
+            (error "cascade.org has no * Inbox heading"))
+          (forward-line 1)
+          (let* ((beg (point))
+                 (end (if (re-search-forward "^\\* " nil t)
+                          (match-beginning 0)
+                        (point-max))))
+            (setq old (buffer-substring-no-properties beg end))
+            (delete-region beg end)
+            (goto-char beg)
+            (insert (string-trim-right text) "\n\n"))
+          (unless was-modified
+            (let ((inhibit-message t)) (save-buffer))))))
+    (unless visiting (kill-buffer buf))
+    old))
+
+(defun czar/cascade--seen-chatter ()
+  (let ((f (expand-file-name "seen-feed-ids" czar/cascade-state-dir)))
+    (when (file-exists-p f)
+      (split-string (with-temp-buffer (insert-file-contents f)
+                                      (buffer-string))
+                    "\n" t))))
+
+(defun czar/cascade-inbox-refresh ()
+  "Refresh the Inbox mail slot from Salesforce: assigned tickets + chatter.
+Rewrites ONLY the Inbox subtree. Notifies on newly-assigned tickets,
+status changes, and new chatter; a first run seeds silently."
+  (interactive)
+  (let* ((tickets (czar/cascade--sf czar/cascade--ticket-soql))
+         (names (make-hash-table :test #'equal)))
+    (dolist (r tickets)
+      (puthash (gethash "Id" r) (gethash "Name" r) names))
+    (let* ((chatter (czar/cascade--chatter
+                     (mapcar (lambda (r) (gethash "Id" r)) tickets) names))
+           (ticket-lines
+            (mapcar (lambda (r)
+                      (format "** %s :: %s  [%s / %s / due %s]"
+                              (gethash "Name" r)
+                              (czar/cascade--f r "Subject__c" "(no subject)")
+                              (czar/cascade--f r "Status__c")
+                              (czar/cascade--f r "Priority_Level__c")
+                              (czar/cascade--f r "Date_Requested_By__c")))
+                    tickets))
+           (text (concat
+                  "Machine-refreshed mail slot — the only subtree machines"
+                  " may write. Pull items in by hand.\n"
+                  "refreshed: " (format-time-string "%F %R") "\n\n"
+                  "** chatter (14d)\n"
+                  (if chatter
+                      (string-join (mapcar #'caddr chatter) "\n")
+                    "- (silence)")
+                  "\n\n" (string-join ticket-lines "\n")))
+           (old (czar/cascade--replace-inbox text))
+           (old-statuses (czar/cascade--inbox-statuses old))
+           (new-statuses (czar/cascade--inbox-statuses text)))
+      ;; newly-assigned tickets (silent when the slot held none, i.e. first run)
+      (when old-statuses
+        (czar/cascade--notify
+         "cascade — new tickets assigned"
+         (string-join
+          (seq-filter (lambda (line)
+                        (when (string-match "\\(SA-[0-9]+\\)" line)
+                          (not (assoc (match-string 1 line) old-statuses))))
+                      ticket-lines)
+          "\n"))
+        ;; status changes
+        (czar/cascade--notify
+         "cascade — ticket status changes"
+         (string-join
+          (delq nil (mapcar (lambda (new)
+                              (let ((old-s (cdr (assoc (car new) old-statuses))))
+                                (when (and old-s (not (equal old-s (cdr new))))
+                                  (format "%s: %s → %s"
+                                          (car new) old-s (cdr new)))))
+                            new-statuses))
+          "\n")))
+      ;; new chatter (silent until a seen-file exists)
+      (let ((seen (czar/cascade--seen-chatter)))
+        (when seen
+          (czar/cascade--notify
+           "cascade — new chatter"
+           (string-join (mapcar #'caddr
+                                (seq-remove (lambda (c) (member (car c) seen))
+                                            chatter))
+                        "\n"))))
+      (make-directory czar/cascade-state-dir t)
+      (write-region (concat (string-join (mapcar #'car chatter) "\n") "\n")
+                    nil (expand-file-name "seen-feed-ids"
+                                          czar/cascade-state-dir)
+                    nil 'quiet)
+      (length tickets))))
+
+;; --- snapshot: the camera --------------------------------------------
+
+(defun czar/cascade-snapshot ()
+  "Camera, not broom: at each section's cadence boundary, COPY it into
+archive/<scale>/<date>-auto.org. Never edits cascade.org; ritual closes
+(<date>.org, by hand) stay the canonical archive entries."
+  (interactive)
+  (let* ((today (format-time-string "%F"))
+         (dow (string-to-number (format-time-string "%u")))
+         (md (format-time-string "%m-%d"))
+         (snap (lambda (scale heading)
+                 (let ((out (expand-file-name
+                             (format "archive/%s/%s-auto.org" scale today)
+                             czar/cascade-dir)))
+                   (unless (file-exists-p out)
+                     (when-let* ((text (czar/cascade--subtree heading)))
+                       (write-region text nil out nil 'quiet))))))
+         ;; biweekly Mondays anchored to the 2026-08-31 sprint close
+         (sprint-days (- (time-to-days (current-time))
+                         (time-to-days (encode-time 0 0 0 31 8 2026)))))
+    (when (= dow 2) (funcall snap "week" "Week"))
+    (when (and (= dow 1) (zerop (mod sprint-days 14)))
+      (funcall snap "sprint" "Sprint"))
+    (when (member md '("01-01" "04-01" "07-01" "10-01"))
+      (funcall snap "quarter" "Quarter")
+      (funcall snap "push" "Push"))
+    (when (equal md "01-01")
+      (funcall snap "year" "Year"))))
+
+(global-set-key (kbd "C-c c") #'czar/cascade)
+
+;; Agenda kept only as a free date-sorted view over the cascade's
+;; timestamps (C-c a a) — optional sugar, costs nothing.
+(setq org-agenda-files (list czar/cascade-file))
 (global-set-key (kbd "C-c a") #'org-agenda)
 
 ;; evil-org: vim-flavored heading manipulation (t cycles TODO, >>/<<

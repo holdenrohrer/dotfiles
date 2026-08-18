@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 {
-  imports = [ ./ticket-watch ];
+  imports = [ ./cascade ];
 
   home.packages = [
     (pkgs.callPackage ./packages/vercel { })
