@@ -111,26 +111,66 @@
       (setq s (string-replace (car pair) (cdr pair) s)))
     (string-trim (replace-regexp-in-string "[ \t\n\r]+" " " s))))
 
+(defconst czar/cascade--sf-url
+  "https://synchronizedsolutions.my.salesforce.com/lightning/r/Syncx_Assist__c/%s/view")
+
+(defun czar/cascade--fill (text)
+  "TEXT filled to a readable width."
+  (with-temp-buffer
+    (insert text)
+    (let ((fill-column 72)) (fill-region (point-min) (point-max)))
+    (string-trim (buffer-string))))
+
+(defun czar/cascade--local-ts (ts)
+  "Salesforce ISO timestamp TS as local \"YYYY-MM-DD HH:MM\"."
+  (condition-case nil
+      (format-time-string "%F %H:%M" (date-to-time ts))
+    (error (substring ts 0 10))))
+
+(defun czar/cascade--org-table (rows)
+  "ROWS (equal-length string lists, header first) as an aligned org table."
+  (let* ((ncol (length (car rows)))
+         (widths (make-list ncol 0)))
+    (dolist (row rows)
+      (setq widths (seq-map-indexed
+                    (lambda (w i) (max w (string-width (nth i row))))
+                    widths)))
+    (let* ((pad (lambda (cell i)          ; last column unpadded: links
+                  (if (= i (1- ncol)) cell ; live there, org folds them
+                    (concat cell
+                            (make-string (- (nth i widths)
+                                            (string-width cell))
+                                         ?\s)))))
+           (render (lambda (row)
+                     (concat "| " (string-join (seq-map-indexed pad row)
+                                               " | ")
+                             " |"))))
+      (concat (funcall render (car rows)) "\n"
+              "|" (mapconcat (lambda (w) (make-string (+ w 2) ?-))
+                             (butlast widths) "+")
+              "+---|\n"
+              (mapconcat render (cdr rows) "\n")))))
+
 (defun czar/cascade--chatter-entries (records body-key names)
-  "RECORDS with non-null BODY-KEY as (tag ts line); NAMES maps Id to SA.
-The trailing ⟨tag⟩ is the feed id's tail — the stable identity that
-delete-to-dismiss tracks."
+  "RECORDS with non-null BODY-KEY as (tag ts subtree); NAMES maps Id to SA.
+The ⟨tag⟩ in the heading is the feed id's tail — the stable identity
+that delete-to-dismiss tracks; delete the whole subtree to dismiss."
   (delq nil
         (mapcar
          (lambda (r)
            (let ((body (gethash body-key r)))
              (unless (or (null body) (eq body :null))
-               (let ((tag (substring (gethash "Id" r) -6)))
-                 (list tag
-                       (gethash "CreatedDate" r)
-                       (format "- %s %s @ %s :: %s ⟨%s⟩"
-                               (substring (gethash "CreatedDate" r) 0 10)
+               (let ((tag (substring (gethash "Id" r) -6))
+                     (ts (gethash "CreatedDate" r)))
+                 (list tag ts
+                       (format "** %s %s @ %s ⟨%s⟩\n%s"
+                               (czar/cascade--local-ts ts)
                                (gethash "Name" (gethash "CreatedBy" r))
                                (gethash (gethash "ParentId" r) names
                                         (gethash "ParentId" r))
-                               (truncate-string-to-width
-                                (czar/cascade--html->text body) 120)
-                               tag))))))
+                               tag
+                               (czar/cascade--fill
+                                (czar/cascade--html->text body))))))))
          records)))
 
 (defun czar/cascade--chatter (ids names)
@@ -139,9 +179,9 @@ NAMES maps ticket Id to SA number."
   (when ids
     (let* ((idlist (mapconcat (lambda (i) (format "'%s'" i)) ids ", "))
            (posts (czar/cascade--sf
-                   (format "SELECT Id, ParentId, CreatedBy.Name, Body, CreatedDate FROM FeedItem WHERE ParentId IN (%s) AND CreatedDate = LAST_N_DAYS:14 ORDER BY CreatedDate DESC LIMIT 100" idlist)))
+                   (format "SELECT Id, ParentId, CreatedBy.Name, Body, CreatedDate FROM FeedItem WHERE ParentId IN (%s) AND CreatedDate = LAST_N_DAYS:14 ORDER BY CreatedDate DESC LIMIT 200" idlist)))
            (comments (czar/cascade--sf
-                      (format "SELECT Id, ParentId, CreatedBy.Name, CommentBody, CreatedDate FROM FeedComment WHERE ParentId IN (%s) AND CreatedDate = LAST_N_DAYS:14 ORDER BY CreatedDate DESC LIMIT 100" idlist))))
+                      (format "SELECT Id, ParentId, CreatedBy.Name, CommentBody, CreatedDate FROM FeedComment WHERE ParentId IN (%s) AND CreatedDate = LAST_N_DAYS:14 ORDER BY CreatedDate DESC LIMIT 200" idlist))))
       (sort (nconc (czar/cascade--chatter-entries posts "Body" names)
                    (czar/cascade--chatter-entries comments "CommentBody" names))
             (lambda (a b) (string> (cadr a) (cadr b)))))))
@@ -215,26 +255,32 @@ a line czar deletes is recorded in state and never resurrected."
                                          newly))))
            (visible (seq-remove (lambda (c) (member (car c) dismissed))
                                 chatter))
-           (ticket-lines
-            (mapcar (lambda (r)
-                      (format "** %s :: %s  [%s / %s / due %s]"
-                              (gethash "Name" r)
-                              (czar/cascade--f r "Subject__c" "(no subject)")
-                              (czar/cascade--f r "Status__c")
-                              (czar/cascade--f r "Priority_Level__c")
-                              (czar/cascade--f r "Date_Requested_By__c")))
-                    tickets)))
+           (rows
+            (cons (list "SA" "subject" "status" "priority" "due" "")
+                  (mapcar (lambda (r)
+                            (list (gethash "Name" r)
+                                  (czar/cascade--f r "Subject__c"
+                                                   "(no subject)")
+                                  (czar/cascade--f r "Status__c")
+                                  (czar/cascade--f r "Priority_Level__c")
+                                  (czar/cascade--f r "Date_Requested_By__c")
+                                  (format "[[%s][↗]]"
+                                          (format czar/cascade--sf-url
+                                                  (gethash "Id" r)))))
+                          tickets))))
       (czar/cascade--swap-doorstep
        (concat
         "# doorstep — the only file machines write; linked from cascade.org\n"
-        "# review at day start · delete a chatter line to dismiss it forever\n"
+        "# review at day start · delete a chatter subtree to dismiss it forever\n"
         "# refreshed: " (format-time-string "%F %R") "\n\n"
-        "* chatter (14d, delete-to-dismiss)\n"
+        "* tickets — " (number-to-string (length tickets))
+        " open, by priority then due\n"
+        (czar/cascade--org-table rows)
+        "\n\n* chatter — last 14 days, delete-to-dismiss\n"
         (if visible
-            (string-join (mapcar #'caddr visible) "\n")
-          "- (inbox zero ✓)")
-        "\n\n* tickets — by priority, then due\n"
-        (string-join ticket-lines "\n") "\n"))
+            (mapconcat #'caddr visible "\n")
+          "(inbox zero ✓)")
+        "\n"))
       (czar/cascade--write-state-ids "chatter-shown" (mapcar #'car visible))
       (czar/cascade--write-state-ids "chatter-dismissed" dismissed)
       (length tickets))))
