@@ -15,11 +15,11 @@ A **hidden Scheduled Task** runs it as the interactive desktop user:
 
 | Aspect | Value |
 |---|---|
-| Cadence | every **5 minutes** |
+| Cadence | every **3 minutes** (must stay under Teams' ~5-min Away threshold, with margin) |
 | Window | **08:00–17:00** local (9h repetition off an 08:00 weekly trigger) |
 | Days | **Mon–Fri** |
 | Online only | `RunOnlyIfNetworkAvailable` — silent when offline |
-| Off-hours | `StartWhenAvailable=$false` — no catch-up nudges outside the window |
+| Boot/wake | `StartWhenAvailable=$true` — **required**: without it every repetition is declared "missed" (event 153, result `0x800710E0`) and the exe never runs. Also catches late boots/wakes within the window. The 9h repetition window still caps activity at 17:00. |
 | Runs as | `AzureAD\HoldenRohrer_il`, `LogonType Interactive` (only the interactive session can move the real cursor) |
 | Visibility | task `Hidden`, name `InputSyncHost`, exe under `%LOCALAPPDATA%\Microsoft\InputSyncHost\` |
 
@@ -46,9 +46,18 @@ install dir).
 
 ## Caveats
 
+- **Verify against a *real* trigger fire, not `Start-ScheduledTask`.** A manual
+  start always runs (it bypasses schedule/condition logic), so it's a false
+  positive — the first cut of this task passed manual starts but silently failed
+  every real 3-min trigger with "missed schedule" (`0x800710E0`) until
+  `StartWhenAvailable=$true` was set. Confirm `LastTaskResult=0x0` on an
+  unattended fire, e.g. watch `(Get-ScheduledTaskInfo InputSyncHost)` across a
+  trigger boundary.
 - **Locked screen still shows Away.** Teams reports Away when the workstation is
   locked, regardless of injected input. This keeps you Available while the
-  session is *unlocked but idle* — it does not defeat a lock.
+  session is *unlocked but idle* — it does not defeat a lock. (Because the 3-min
+  nudge also resets the auto-lock timer, the screen shouldn't lock from idle in
+  the first place, as long as any lock timeout is longer than 3 min.)
 - Corporate **EDR/DLP may flag synthetic input injection**. This is a personal
   convenience tool on your own machine; it makes no attempt to evade security
   tooling.

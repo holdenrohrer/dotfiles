@@ -21,6 +21,8 @@ $InteractiveUser = 'AzureAD\HoldenRohrer_il'                     # whose desktop
 $UserProfile = 'C:\Users\HoldenRohrer'                           # that user's profile root
 $StartHour   = 8                                                 # 08:00 local
 $WindowHours = 9                                                 # => last fire by 17:00
+$IntervalMin = 3                                                 # nudge cadence; keep < Teams'
+                                                                 #   ~5-min Away threshold, with margin
 $Days        = 'Monday','Tuesday','Wednesday','Thursday','Friday'
 # ----------------------------------------------------------------------------
 
@@ -65,7 +67,7 @@ $at = Get-Date -Hour $StartHour -Minute 0 -Second 0
 $action  = New-ScheduledTaskAction -Execute $ExePath
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek $Days -At $at
 $trigger.Repetition = (New-ScheduledTaskTrigger -Once -At $at `
-    -RepetitionInterval (New-TimeSpan -Minutes 5) `
+    -RepetitionInterval (New-TimeSpan -Minutes $IntervalMin) `
     -RepetitionDuration (New-TimeSpan -Hours $WindowHours)).Repetition
 
 $principal = New-ScheduledTaskPrincipal -UserId $InteractiveUser -LogonType Interactive -RunLevel Limited
@@ -74,7 +76,8 @@ $settings  = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
     -MultipleInstances IgnoreNew -Hidden `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 1)
-$settings.StartWhenAvailable = $false   # no off-hours catch-up nudges
+$settings.StartWhenAvailable = $true    # boot/wake after 08:00 -> start as soon as available
+                                        #   (the repetition window still caps activity at 17:00)
 
 Register-ScheduledTask -TaskName $TaskName -TaskPath $TaskPath `
     -Action $action -Trigger $trigger -Principal $principal -Settings $settings `
