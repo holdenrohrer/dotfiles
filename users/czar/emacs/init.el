@@ -579,6 +579,10 @@ journal for tomorrow."
 (use-package flycheck
   :hook ((after-init-hook . global-flycheck-mode))
   :config
+  ;; flycheck's org-lint checker crashes on org 9.7+ output (line numbers
+  ;; are now propertized strings, it expects numbers) — every recheck
+  ;; becomes an error popup. Disable until fixed upstream.
+  (setq-default flycheck-disabled-checkers '(org-lint))
   (add-hook 'eglot-managed-mode-hook
             (lambda () (when (eglot-managed-p) (flycheck-mode -1)))))
 
