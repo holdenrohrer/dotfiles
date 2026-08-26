@@ -636,6 +636,20 @@ in
     Install.WantedBy = [ "graphical-session.target" ];
   };
 
+  # Pin Firefox as the default browser declaratively. Without this, mimeapps.list
+  # is an unmanaged real file that any stray `xdg-settings set` can flip (and it
+  # sticks); managing it here makes it a read-only nix symlink instead.
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "text/html" = "firefox.desktop";
+      "x-scheme-handler/http" = "firefox.desktop";
+      "x-scheme-handler/https" = "firefox.desktop";
+      "x-scheme-handler/about" = "firefox.desktop";
+      "x-scheme-handler/unknown" = "firefox.desktop";
+    };
+  };
+
   xdg.configFile."sway/config".source = pkgs.substitute {
     name = "sway.config";
     src = ./sway.config;
