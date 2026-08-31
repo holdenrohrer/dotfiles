@@ -71,6 +71,10 @@
       ".local/share/com.vercel.cli"
       "drafts"
       "bg"
+      # ~/cascade: org-native time-scale planner (see users/czar/cascade).
+      # Lives on the ephemeral root, so it must persist explicitly or the
+      # boot-time wipe eats it (as it once did — recovered from old_roots).
+      "cascade"
     ];
     files = [
       ".netrc"
