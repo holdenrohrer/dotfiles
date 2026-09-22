@@ -33,6 +33,17 @@
       model = "claude-opus-4-8";
       effortLevel = "low";
       promptSuggestions = false;
+
+      # Emacs runs as a systemd user service, whose environment never sees
+      # /etc/set-environment -- so sessions spawned from it lose the
+      # system-wide SSH_ASKPASS (configuration.nix) and ssh dies looking for
+      # a helper the nix openssh package doesn't ship. Pin it here so every
+      # Claude session can pop wayprompt for the passphrase regardless of
+      # how it was launched.
+      env = {
+        SSH_ASKPASS = "${pkgs.wayprompt}/bin/wayprompt-ssh-askpass";
+        SSH_ASKPASS_REQUIRE = "prefer";
+      };
     };
 
     # Serialize settings + hooks into settings.json
