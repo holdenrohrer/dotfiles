@@ -36,9 +36,13 @@
       inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
       pkgs.unstable.codex
       (pkgs.callPackage ./packages/omp { }) # oh-my-pi terminal AI coding agent
+      # beads (`br`): dependency-aware, git-backed issue tracker for agents.
+      # Needs unstable's rustc (>= 1.96 for vergen 10).
+      (pkgs.callPackage ./packages/beads { rustPlatform = pkgs.unstable.rustPlatform; })
       socat # necessary for claude-code sandbox
       bubblewrap # necessary for claude-code sandbox
       nodejs # for claude-code MCP server
+      chromium # system Chromium for OMP's isolated Puppeteer browser; Firefox stays default
       texliveFull
       gh
       ripgrep
