@@ -104,6 +104,10 @@
   # Ensure system zsh program is enabled when zsh is the login shell
   programs.zsh.enable = true;
 
+  # OMP is an unpatched Bun-compiled ELF. nix-ld preserves the executable as
+  # process.execPath, which its daemon workers need in order to relaunch OMP.
+  programs.nix-ld.enable = true;
+
   programs.light.enable = true;
 
   programs.sway = {

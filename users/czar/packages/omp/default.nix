@@ -1,13 +1,13 @@
-{ lib, stdenvNoCC, fetchurl, makeWrapper, glibc, stdenv }:
+{ lib, stdenvNoCC, fetchurl }:
 
 # oh-my-pi (omp) ships a single-file Bun-compiled executable per release.
 #
-# It is a generic-linux glibc binary, but we must NOT patchelf it: Bun appends
+# It is a generic Linux glibc binary, but we must NOT patchelf it: Bun appends
 # the JS payload to the end of the ELF and locates it by byte offset, so any ELF
 # rewrite (autoPatchelfHook / --set-interpreter) invalidates the trailer and the
-# app silently degrades to a bare Bun runtime. Instead we keep the binary byte
-# for byte and launch it through the Nix glibc loader with an explicit
-# --library-path, which leaves the payload intact.
+# app silently degrades to a bare Bun runtime. NixOS's nix-ld supplies its
+# requested interpreter without rewriting or wrapping it. Direct execution is
+# also required because OMP relaunches process.execPath for daemon workers.
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "omp";
   version = "17.2.12";
@@ -19,14 +19,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   dontUnpack = true;
 
-  nativeBuildInputs = [ makeWrapper ];
-
   installPhase = ''
     runHook preInstall
-    install -Dm755 $src $out/libexec/omp
-    makeWrapper ${glibc}/lib/ld-linux-x86-64.so.2 $out/bin/omp \
-      --add-flags "--library-path ${lib.makeLibraryPath [ glibc stdenv.cc.cc.lib ]}" \
-      --add-flags "$out/libexec/omp"
+    install -Dm755 $src $out/bin/omp
     runHook postInstall
   '';
 
