@@ -544,10 +544,12 @@ in
       init.defaultBranch = "master";
       core.autocrlf = false;
     };
-    # beads (`br`) is my personal work queue, not project history. Kept out of
-    # every repo; worktrees under <repo>/.claude/worktrees find the trunk's
-    # .beads/ by walking up, so one untracked DB serves them all.
-    ignores = [ ".beads/" ];
+    # Per-machine working state, never project history:
+    # - beads (`br`) is my personal work queue; worktrees find the trunk's
+    #   .beads/ by walking up, so one untracked DB serves them all.
+    # - task worktrees (the /work skill) live under <repo>/.claude/worktrees;
+    #   ignoring them keeps the trunk checkout's `git status` clean.
+    ignores = [ ".beads/" ".claude/worktrees/" ];
   };
 
   # GnuPG and gpg-agent with Wayland pinentry (wayprompt)
