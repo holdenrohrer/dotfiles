@@ -5,6 +5,7 @@
     ./ralph-loop.nix
     ./playwright.nix
     ./claude-md.nix
+    ./skills.nix
     ./imap-readonly-mcp.nix
     inputs.claude-code-dbus.homeManagerModules.default
   ];
