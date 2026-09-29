@@ -544,6 +544,10 @@ in
       init.defaultBranch = "master";
       core.autocrlf = false;
     };
+    # beads (`br`) is my personal work queue, not project history. Kept out of
+    # every repo; worktrees under <repo>/.claude/worktrees find the trunk's
+    # .beads/ by walking up, so one untracked DB serves them all.
+    ignores = [ ".beads/" ];
   };
 
   # GnuPG and gpg-agent with Wayland pinentry (wayprompt)
