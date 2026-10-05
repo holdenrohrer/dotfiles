@@ -174,6 +174,28 @@
     persistent = true;
   };
 
+  # nix-optimise hardlink-dedupes the ENTIRE store daily. On btrfs that is a
+  # random-I/O + metadata storm that parks every interactive process in D-state
+  # (we watched load hit ~50 on 14 cores mid-day while nothing showed high CPU --
+  # it was pure I/O wait). It is background maintenance, so throttle it hard
+  # rather than let it fight the live machine for the disk.
+  #
+  # The root/nix device (/dev/mapper/pool-root) runs scheduler=none, so ionice
+  # (IOSchedulingClass) and proportional IOWeight are no-ops here. The lever that
+  # actually bites is cgroup-v2 io.max absolute caps (blk-throttle), which apply
+  # regardless of scheduler. Nice/ionice stay as harmless belt-and-suspenders in
+  # case the scheduler ever changes to BFQ. Caps are "make slow progress in the
+  # background" numbers, not "finish fast".
+  systemd.services.nix-optimise.serviceConfig = {
+    Nice = 19;
+    CPUSchedulingPolicy = "idle";
+    IOSchedulingClass = "idle";
+    IOReadBandwidthMax = "/dev/mapper/pool-root 50M";
+    IOWriteBandwidthMax = "/dev/mapper/pool-root 20M";
+    IOReadIOPSMax = "/dev/mapper/pool-root 600";
+    IOWriteIOPSMax = "/dev/mapper/pool-root 300";
+  };
+
   # Belt-and-suspenders hard cap for *daemon-driven* builds (non-root nix,
   # auto-gc, nix-index): everything the daemon spawns lives in this cgroup.
   # Note: `sudo nixos-rebuild` builds as root outside the daemon, so it is

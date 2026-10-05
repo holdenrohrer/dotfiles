@@ -36,6 +36,14 @@
     claude-code.url = "github:sadjow/claude-code-nix";
     claude-code.inputs.nixpkgs.follows = "nixpkgs";
 
+    # T3 Code desktop client, packaged from the official release artifact.
+    # Same story as claude-code: a community flake owns upgrades through Nix
+    # (bump this input) so the app stays declarative instead of self-updating
+    # a mutable runtime into $HOME. We install packages.t3code (the stable
+    # prebuilt desktop client) by mirroring the claude-code wiring below.
+    t3code.url = "github:LisaScheers/t3-code-nix";
+    t3code.inputs.nixpkgs.follows = "nixpkgs";
+
     # Read-only IMAP MCP server for Claude Code
     imap-readonly-mcp-src = {
       url = "github:AzizMarashly/imap-readonly-mcp";

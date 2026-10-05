@@ -34,6 +34,10 @@
       nmap
       just
       inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
+      # T3 Code desktop client (stable prebuilt). Bump the t3code flake input
+      # to upgrade; the app's own self-updater is left unused so it stays
+      # declarative, exactly like claude-code above.
+      inputs.t3code.packages.${pkgs.stdenv.hostPlatform.system}.t3code
       pkgs.unstable.codex
       (pkgs.callPackage ./packages/omp { }) # oh-my-pi terminal AI coding agent
       # beads (`br`): dependency-aware, git-backed issue tracker for agents.
