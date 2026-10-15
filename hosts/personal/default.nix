@@ -1,4 +1,4 @@
-# Personal laptop (ThinkPad) — machine-specific configuration
+# Personal laptop (Framework 13 AMD) — machine-specific configuration
 
 { config, lib, pkgs, ... }:
 

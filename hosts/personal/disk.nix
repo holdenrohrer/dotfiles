@@ -8,7 +8,7 @@
           type = "gpt";
           partitions = {
             ESP = {
-              size = "500M";
+              size = "1G";
               type = "EF00";
               content = {
                 type = "filesystem";
@@ -17,26 +17,16 @@
                 mountOptions = [ "umask=0077" ];
               };
             };
-            windows = {
-              size = "60G";
-              content = {
-                type = "filesystem";
-                format = "ntfs";
-                mountpoint = "/mnt/win";
-              };
-            };
             luks = {
               size = "100%";
               content = {
                 type = "luks";
                 name = "crypted";
-                extraOpenArgs = [ ];
-                settings = {
-                  # if you want to use the key for interactive login be sure there is no trailing newline
-                  # for example use `echo -n "password" > /tmp/secret.key`
-                  keyFile = "/tmp/secret.key";
-                  allowDiscards = true;
-                };
+                # Read only at format time to set the passphrase; boot prompts
+                # interactively. Write it with no trailing newline:
+                #   read -rs p && printf %s "$p" > /tmp/secret.key
+                passwordFile = "/tmp/secret.key";
+                settings.allowDiscards = true;
                 content = {
                   type = "lvm_pv";
                   vg = "pool";
@@ -51,44 +41,26 @@
       pool = {
         type = "lvm_vg";
         lvs = {
-          root = {
-            size = "100%";
-            content = {
-              type = "btrfs";
-              mountOptions = [ "compress=zstd" "defaults" ];
-              subvolumes = {
-                "@/root" = {
-                  mountpoint = "/";
-                };
-                "@/nix" = {
-                  mountpoint = "/nix";
-                };
-                "@/persist" = {
-                  mountpoint = "/persist";
-                  neededForBoot = true;
-                };
-                "@/var-lib" = {
-                  mountpoint = "/var/lib";
-                };
-                "@/var-cache" = {
-                  mountpoint = "/var/cache";
-                };
-                "@/var-log" = {
-                  mountpoint = "/var/log";
-                  neededForBoot = true;
-                };
-                "@/var-tmp" = {
-                  mountpoint = "/var/tmp";
-                  neededForBoot = true;
-                };
-              };
-            };
-          };
+          # Swap first so it gets a fixed size; it backs hibernate (30G RAM).
           swap = {
-            size = "16G";
+            size = "32G";
             content = {
               type = "swap";
               resumeDevice = true;
+            };
+          };
+          root = {
+            size = "100%FREE";
+            content = {
+              type = "btrfs";
+              # Same semantics as the old ThinkPad layout: everything not on
+              # /nix, /persist or /cache is wiped every boot.
+              subvolumes = {
+                "@/root" = { mountpoint = "/"; mountOptions = [ "compress=zstd" "noatime" ]; };
+                "@/nix" = { mountpoint = "/nix"; mountOptions = [ "compress=zstd" "noatime" ]; };
+                "@/persist" = { mountpoint = "/persist"; mountOptions = [ "compress=zstd" "noatime" ]; };
+                "@/cache" = { mountpoint = "/cache"; mountOptions = [ "compress=zstd" "noatime" ]; };
+              };
             };
           };
         };

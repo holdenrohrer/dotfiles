@@ -17,6 +17,9 @@
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Hardware quirks (Framework 13 AMD AI 300 on personal)
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+
     # Emacs packages from GitHub
     gptel-src = {
       url = "github:karthink/gptel/master";
@@ -132,7 +135,7 @@
   in {
     nixosConfigurations = {
       personal = mkHost {
-        hostModules = [ ./hosts/personal ];
+        hostModules = [ ./hosts/personal inputs.disko.nixosModules.disko ];
         extraHmImports = [ ./users/czar/desktop/games.nix ];
         hostConfig = {
           hostname = "personal";

@@ -11,6 +11,17 @@
       passWithOtp = prev.pass.withExtensions (exts: [ exts.pass-otp ]);
       passff-host = prev.passff-host.override { pass = final.passWithOtp; };
     })
+    # GNU ELPA re-rolled org-9.8.7.tar after emacs-overlay pinned it, so the
+    # pinned hash no longer matches. Drop once emacs-overlay is bumped past it.
+    (final: prev: {
+      emacsPackagesFor = emacs: (prev.emacsPackagesFor emacs).overrideScope (eself: esuper: {
+        org = esuper.org.overrideAttrs (old: {
+          src = old.src.overrideAttrs {
+            outputHash = "sha256-2VI8ewlpqTahsOSNbtoc/nHCmiGLZ6e0VHS4Y2iTtN8=";
+          };
+        });
+      });
+    })
   ];
 
   # Unfree packages allowed on every host. A name here is only consulted when
