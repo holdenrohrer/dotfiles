@@ -19,18 +19,21 @@ let
       ${pkgs.gawk}/bin/awk '{s+=$1} END{print s+0}' "$@"
     }
 
-    # Composite battery per‑mille using design capacity (energy_* only).
+    # Composite battery per‑mille using design capacity. Batteries report
+    # either energy_* (µWh, e.g. ThinkPad) or charge_* (µAh, e.g. Framework);
+    # use whichever family is present. Prints nothing if neither is readable,
+    # so "unknown" can never be mistaken for "empty".
     per_mille_design() {
-      if compgen -G "/sys/class/power_supply/BAT*/energy_full_design" > /dev/null; then
-        local full now
-        full=$(sum_files /sys/class/power_supply/BAT*/energy_full_design)
-        now=$(sum_files /sys/class/power_supply/BAT*/energy_now)
+      local unit full now
+      for unit in energy charge; do
+        compgen -G "/sys/class/power_supply/BAT*/''${unit}_full_design" > /dev/null || continue
+        full=$(sum_files /sys/class/power_supply/BAT*/''${unit}_full_design)
+        now=$(sum_files /sys/class/power_supply/BAT*/''${unit}_now)
         if [ "$full" -gt 0 ]; then
           echo $(( (1000 * now) / full ))
           return
         fi
-      fi
-      echo 0
+      done
     }
 
     # Set all Caps Lock LEDs to 0/1 if present.
@@ -47,7 +50,11 @@ let
       fi
 
       local pm
-      pm=$(per_mille_design)  # integer (0 if unknown)
+      pm=$(per_mille_design)
+      if [ -z "$pm" ]; then
+        echo "low-bat: no readable battery capacity; doing nothing" >&2
+        exit 1
+      fi
       printf 'low-bat: %s‰ remaining (design)\n' "$pm"
 
       if [ "$pm" -le 10 ]; then        # <= 1%
