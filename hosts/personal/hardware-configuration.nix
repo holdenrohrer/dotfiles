@@ -15,6 +15,10 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
+  # nixos-hardware already disables PSR; Panel Replay (its successor) still
+  # flickers on partial updates like moving windows.
+  hardware.amdgpu.dcDebugMask.disableReplay = true;
+
   fileSystems."/persist".neededForBoot = true;
 
   impermanence-wipe = {
