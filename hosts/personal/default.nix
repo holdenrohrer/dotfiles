@@ -35,6 +35,11 @@
     lidSwitchExternalPower = "hybrid-sleep";
   };
 
+  # Stop charging at 80% to spare the battery on a mostly-plugged-in laptop.
+  services.udev.extraRules = ''
+    SUBSYSTEM=="power_supply", KERNEL=="BAT*", ATTR{charge_control_end_threshold}="80"
+  '';
+
   # Network monitoring
   services.smokeping = {
     enable = true;

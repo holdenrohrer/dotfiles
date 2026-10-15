@@ -19,6 +19,16 @@
   # flickers on partial updates like moving windows.
   hardware.amdgpu.dcDebugMask.disableReplay = true;
 
+  # Speaker EQ profile; the stock tuning is thin and tinny.
+  # Its default target is the ACP "HiFi__Speaker__sink", but nixos-hardware
+  # also blacklists ACP, so the speakers surface as generic HDA analog-stereo.
+  hardware.framework.laptop13.audioEnhancement = {
+    enable = true;
+    rawDeviceName = "alsa_output.pci-0000_c1_00.6.analog-stereo";
+  };
+  # Community EC module: fan, LEDs and battery controls under sysfs.
+  hardware.framework.enableKmod = true;
+
   fileSystems."/persist".neededForBoot = true;
 
   impermanence-wipe = {
