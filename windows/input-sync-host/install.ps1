@@ -6,7 +6,10 @@
   resets the OS idle timer (GetLastInputInfo) so the interactive session stays
   "active" and Microsoft Teams presence stays Available instead of Away.
 
-  A hidden Scheduled Task runs it as the interactive desktop user every 5 min,
+  It nudges only while the console display is on: injected input on a closed
+  lid would pull the laptop out of Modern Standby and keep it awake in a bag.
+
+  A hidden Scheduled Task runs it as the interactive desktop user every 3 min,
   Mon-Fri, 08:00-17:00 local, only while a network connection is available.
 
   Run this as a local admin (e.g. the SSH `czar` account). Idempotent.
@@ -33,6 +36,12 @@ $ExePath    = Join-Path $InstallDir 'InputSyncHost.exe'
 $src = @'
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Forms;
+
+// Nudge only while the console display is lit. A closed lid (or a sleeping
+// laptop briefly woken by a charger "display burst") reports the display as
+// off, and injected input then would pull the machine out of Modern Standby.
 class InputSyncHost {
     [StructLayout(LayoutKind.Sequential)]
     struct MOUSEINPUT { public int dx; public int dy; public uint mouseData;
@@ -41,12 +50,53 @@ class InputSyncHost {
     struct INPUT { public uint type; public MOUSEINPUT mi; }
     [DllImport("user32.dll", SetLastError = true)]
     static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern IntPtr RegisterPowerSettingNotification(IntPtr hRecipient, ref Guid PowerSettingGuid, int Flags);
+    [DllImport("user32.dll")]
+    static extern bool UnregisterPowerSettingNotification(IntPtr handle);
+
     const uint MOUSEEVENTF_MOVE = 0x0001;
-    static void Main() {
+    const int  WM_POWERBROADCAST = 0x0218, PBT_POWERSETTINGCHANGE = 0x8013;
+    static Guid GUID_CONSOLE_DISPLAY_STATE = new Guid("6fe69556-704a-47a0-8f24-c28d936fda47");
+
+    // Exit codes double as telemetry in the task's LastTaskResult.
+    enum Display { Off = 0, On = 1, Dimmed = 2, Unknown = 255 }
+
+    // Windows answers a fresh registration with the current value, so a
+    // message-only window that listens for a moment learns the display state.
+    sealed class Listener : NativeWindow {
+        public Display State = Display.Unknown;
+        public Listener() { CreateHandle(new CreateParams { Parent = (IntPtr)(-3) }); } // HWND_MESSAGE
+        protected override void WndProc(ref Message m) {
+            if (m.Msg == WM_POWERBROADCAST && (int)m.WParam == PBT_POWERSETTINGCHANGE)
+                State = (Display)Marshal.ReadInt32(m.LParam, 20); // POWERBROADCAST_SETTING.Data
+            base.WndProc(ref m);
+        }
+    }
+
+    static Display ConsoleDisplay() {
+        var l = new Listener();
+        IntPtr reg = RegisterPowerSettingNotification(l.Handle, ref GUID_CONSOLE_DISPLAY_STATE, 0);
+        for (var deadline = DateTime.UtcNow.AddSeconds(2);
+             l.State == Display.Unknown && DateTime.UtcNow < deadline; Thread.Sleep(20))
+            Application.DoEvents();
+        UnregisterPowerSettingNotification(reg);
+        l.DestroyHandle();
+        return l.State;
+    }
+
+    static void Nudge() {
         INPUT[] a = new INPUT[2];
         a[0].mi.dx = 1;  a[0].mi.dwFlags = MOUSEEVENTF_MOVE;
         a[1].mi.dx = -1; a[1].mi.dwFlags = MOUSEEVENTF_MOVE;
         SendInput(2, a, Marshal.SizeOf(typeof(INPUT)));
+    }
+
+    static int Main(string[] args) {
+        Display d = ConsoleDisplay();
+        bool dry = args.Length > 0 && args[0] == "--dry";
+        if (!dry && (d == Display.On || d == Display.Dimmed)) Nudge(); // unknown => stay quiet
+        return (int)d;
     }
 }
 '@
@@ -55,7 +105,7 @@ New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 $srcFile = Join-Path $env:TEMP 'InputSyncHost.cs'
 Set-Content -Path $srcFile -Value $src -Encoding ASCII
 $csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-& $csc /nologo /target:winexe /optimize+ /out:"$ExePath" "$srcFile" | Out-Null
+& $csc /nologo /target:winexe /r:System.Windows.Forms.dll /optimize+ /out:"$ExePath" "$srcFile" | Out-Null
 Remove-Item $srcFile -Force -ErrorAction SilentlyContinue
 if (-not (Test-Path $ExePath)) { throw "compile failed: $ExePath not produced" }
 Write-Output "compiled $ExePath ($((Get-Item $ExePath).Length) bytes)"
