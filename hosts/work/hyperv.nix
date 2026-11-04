@@ -2,6 +2,29 @@
 { config, pkgs, lib, ... }:
 
 let
+  # PipeWire sink/source that speaks xrdp-chansrv's audio socket protocol.
+  # Hyper-V has no emulated sound card: in Enhanced Session, audio reaches
+  # Windows only over RDP's rdpsnd channel, via this module.
+  pipewire-module-xrdp = pkgs.stdenv.mkDerivation rec {
+    pname = "pipewire-module-xrdp";
+    version = "0.1";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "neutrinolabs";
+      repo = "pipewire-module-xrdp";
+      rev = "v${version}";
+      hash = "sha256-ZiKVAMAFBkMpZFqrn4hjZZPxdR+sBtcd4W30z8pkdzk=";
+    };
+
+    nativeBuildInputs = with pkgs; [ autoreconfHook pkg-config ];
+    buildInputs = [ pkgs.pipewire ];
+
+    configureFlags = [
+      "--with-module-dir=${placeholder "out"}/lib/pipewire-0.3"
+      "--with-xdgautostart-dir=${placeholder "out"}/etc/xdg/autostart"
+    ];
+  };
+
   swaySession = pkgs.writeShellScript "sway-xrdp" ''
     # Source home-manager session variables (QT theming, XDG dirs, etc.)
     . /etc/profiles/per-user/czar/etc/profile.d/hm-session-vars.sh
@@ -74,7 +97,6 @@ STUB
         --replace-fail "h264_frame_interval=16" "h264_frame_interval=8" \
         --replace-fail "rfx_frame_interval=32" "rfx_frame_interval=8" \
         --replace-fail "normal_frame_interval=40" "normal_frame_interval=8" \
-        --replace-fail "rdpsnd=true" "rdpsnd=false" \
         --replace-fail "certificate=/etc/xrdp/cert.pem" "certificate=/persist/etc/xrdp/cert.pem" \
         --replace-fail "key_file=/etc/xrdp/key.pem" "key_file=/persist/etc/xrdp/key.pem"
       sed -i '/^\[ChansrvLogging\]/,/^LogLevel=/{s/^LogLevel=.*/LogLevel=DEBUG/}' $out/sesman.ini
@@ -113,6 +135,45 @@ STUB
       Environment = "DISPLAY=:10";
       Restart = "always";
       RestartSec = 5;
+    };
+  };
+
+  # xrdp audio: load the module into the running PipeWire. The pw-cli client
+  # owns the module, so it must stay alive. The module reconnects to
+  # chansrv's socket by itself, so it survives RDP reconnects.
+  systemd.user.services.xrdp-audio = {
+    description = "xrdp audio sink/source for PipeWire";
+    partOf = [ "graphical-session.target" ];
+    wantedBy = [ "graphical-session.target" ];
+    after = [ "pipewire.service" "xrdp-chansrv.service" ];
+    requires = [ "pipewire.service" ];
+    environment = {
+      DISPLAY = ":10";
+      XRDP_SOCKET_PATH = "/run/xrdp/%U";
+      # Required: the module NULL-derefs on first playback without them.
+      XRDP_PULSE_SINK_SOCKET = "xrdp_chansrv_audio_out_socket_10";
+      XRDP_PULSE_SOURCE_SOCKET = "xrdp_chansrv_audio_in_socket_10";
+      PIPEWIRE_MODULE_DIR = "${pipewire-module-xrdp}/lib/pipewire-0.3:${config.services.pipewire.package}/lib/pipewire-0.3";
+    };
+    serviceConfig = {
+      ExecStart = lib.escapeShellArgs [
+        "${config.services.pipewire.package}/bin/pw-cli" "-m" "load-module" "libpipewire-module-xrdp-pipewire"
+        "sink.node.latency=2048"
+        "sink.stream.props={node.name=xrdp-sink}"
+        "source.stream.props={node.name=xrdp-source}"
+      ];
+      Restart = "always";
+      RestartSec = 5;
+    };
+  };
+
+  # xrdp's rdpsnd runs at 44.1kHz; bigger quanta avoid choppy audio over RDP
+  # (the same settings upstream's load_pw_modules.sh applies via pw-metadata).
+  services.pipewire.extraConfig.pipewire."90-xrdp" = {
+    "context.properties" = {
+      "default.clock.rate" = 44100;
+      "default.clock.quantum" = 4096;
+      "default.clock.min-quantum" = 4096;
     };
   };
 
