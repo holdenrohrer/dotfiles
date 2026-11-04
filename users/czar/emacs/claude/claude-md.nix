@@ -9,7 +9,7 @@
 
     When `git push` fails with SSH permission denied, just retry the same command. The user has a passphrase-protected SSH key and missed the password prompt. Don't worry about troubleshooting SSH keys, ssh-add, or switch to HTTPS.
 
-    Working-tree discipline: `~/projects/<repo>` is the trunk checkout and is never edited. Every change happens on its own branch in `<repo>/.claude/worktrees/<bead-id>` via the `/work` skill. The branch is what's durable, the worktree is disposable, and uncommitted work doesn't exist -- commit WIP freely. Never create sibling clones like `~/projects/<repo>-<feature>`. Never kill running `claude` processes.
+    Working-tree discipline: `~/projects/<repo>` is the trunk checkout and is never edited. Every change happens on its own branch in `<repo>/.claude/worktrees/<bead-id>` via the `/work` skill. The branch is what's durable, the worktree is disposable, and uncommitted work doesn't exist -- commit WIP freely. Never create sibling clones like `~/projects/<repo>-<feature>`. The one exception is `~/projects/dotfiles`: work directly on `master` in the trunk checkout -- no worktree, no branch, no PR. Never kill running `claude` processes.
 
     When you're running any long-running process, especially builds, or long watches, NEVER pipe it to a tail -##. It deletes a lot of useful information and makes it incredibly difficult to early-stop if needed. Instead, | tee /tmp/a-file.log | tail -40 or pipe it to a log file directly and tail -20 it regularly to see what updates are happening.
 

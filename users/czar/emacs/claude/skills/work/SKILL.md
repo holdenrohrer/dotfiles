@@ -9,6 +9,11 @@ description: Start, resume, check on, or finish a unit of work — one bead, one
 cache of a branch. Anything uncommitted doesn't exist. `~/projects/<repo>` is the
 trunk checkout and is never edited.
 
+**Exception: `~/projects/dotfiles`.** No bead, no branch, no worktree, no PR.
+Edit the trunk checkout directly on `master`, commit there (signed — stage your
+own paths, write the message to a file, and hand the user
+`! git -C ~/projects/dotfiles commit -F <msgfile>`), then `git push origin master`.
+
 ## Vocabulary
 
 | thing | where | rule |
@@ -61,7 +66,6 @@ Never give subagents `isolation: worktree`; they work in this worktree or read-o
 
 - anything that deploys to Salesforce **prod**
 - `syncx-infra` (real GCP)
-- `dotfiles` (signed commits — hand the commit to the user via `!`)
 - any repo whose `CLAUDE.md` says so
 
 ## `/work status`
